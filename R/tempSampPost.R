@@ -12,6 +12,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
                          output_path = "../data/sampled_posterior_1000/",
                          REGION_IN_Q = "psi.fs",
                          sample_n = 1000,
+                         tolerance = 3, # number of iterations above or below sample_n to be acceptable
                          group_name = "",
                          combined_output = TRUE,
                          max_year_model = NULL, 
@@ -49,7 +50,21 @@ tempSampPost <- function(indata = "../data/model_runs/",
     
     if(nRec >= minObs) {
       raw_occ <- data.frame(out$BUGSoutput$sims.list[REGION_IN_Q])
-      raw_occ <- raw_occ[sample(1:nrow(raw_occ), sample_n),]
+      
+      # check whether the number of sims is enough to sample 
+      # first calculate the difference between n.sims and sample_n.
+      # positive numbers indicate we have more than we need
+      diff <- out$BUGSoutput$n.sims - sample_n
+      if(diff > tolerance){
+        # we have more sims in the model than we want, so we need to sample them
+        raw_occ <- raw_occ[sample(1:nrow(raw_occ), sample_n),]
+      } else 
+        if(abs(diff) <= tolerance){
+          # The number of sims is very close to the target, so no need to sample
+          print(paste0("no sampling required: n.sims=", n.sims))
+        } else
+          stop("Not enough iterations stored. Choose a smaller value of sample_n")
+      
       colnames(raw_occ) <- paste("year_", out$min_year:out$max_year, sep = "")
       raw_occ$iteration <- 1:sample_n
       raw_occ$species <- species
