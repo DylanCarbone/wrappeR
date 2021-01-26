@@ -24,4 +24,4 @@
 #' @examples
 #' data(speciesInfo)
 #' 
-"grav"
+"speciesInfo"
