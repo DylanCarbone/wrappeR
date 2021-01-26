@@ -30,9 +30,8 @@ tempSampPost <- function(indata = "../data/model_runs/",
   ### set up species list we want to loop though ###
   
   spp.list <- list.files(indata, 
-                         pattern = paste0(filetype),"$") # species for which we have models
-  
-  spp.list <- gsub(".rdata", "", spp.list)
+                         pattern = paste0(filetype,"$")) # species for which we have models
+  spp.list <- gsub(patt=paste0(".",filetype), "", spp.list)
   
   # to identify if the models are JASMIN based
   first.spp <- spp.list[[1]]
