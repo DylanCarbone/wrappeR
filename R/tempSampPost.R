@@ -22,14 +22,15 @@ tempSampPost <- function(indata = "../data/model_runs/",
                          t0, 
                          tn,
                          parallel = TRUE,
-                         n.cores = NULL){
+                         n.cores = NULL,
+                         filetype = "rdata"){
   
   if(parallel & is.null(n.cores)) n.cores <- parallel::detectCores() - 1
   
   ### set up species list we want to loop though ###
   
   spp.list <- list.files(indata, 
-                         pattern = ".rdata") # species for which we have models
+                         pattern = paste0(filetype),"$") # species for which we have models
   
   spp.list <- gsub(".rdata", "", spp.list)
   
@@ -83,8 +84,10 @@ tempSampPost <- function(indata = "../data/model_runs/",
       }
 
     } else {
-      
-      out_dat <- load_rdata(paste0(indata, species, ".rdata"))
+      if(filetype == "rds")
+        out_dat <- readRDS(paste0(indata, species, ".rds"))
+      else if(filetype == "rdata")
+        out_dat <- load_rdata(paste0(indata, species, ".rdata"))
       out_meta <- out_dat
       
     }

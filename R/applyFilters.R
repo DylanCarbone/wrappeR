@@ -36,10 +36,18 @@ applyFilters <- function(roster, parallel = TRUE) {
                        inPath = roster$metaPath)
     
   } else {
-
-    keep <- gsub(".rdata", "", list.files(paste0(roster$modPath, roster$group, "/occmod_outputs/", roster$ver, "/"),
-                            pattern = ".rdata")) 
+    modFilePath <- file.path(roster$modPath, roster$group, "occmod_outputs", roster$ver)
+    modFiles <- list.files(modFilePath)
     
+    # read the suffix of the first model files
+    filetype <- strsplit(modFiles[1], "\\.")[[1]][2] 
+    if(!filetype %in% c("rdata", "rds")) stop("Model files must be either .rds or .rdata")
+    
+    # strip out the files
+    modFiles <- modFiles[grepl(paste0(filetype,"$"), model_files)] # dollar sign ensures the filepype suffix is at end of name
+    
+    # retain the species names
+    keep <- gsub(patt=paste0("\\.", filetype), repl="", modFiles)
   }
   
   first_spp <- keep[[1]]
@@ -73,7 +81,8 @@ applyFilters <- function(roster, parallel = TRUE) {
                       minObs = roster$minObs,
                       t0 = roster$t0,
                       tn = roster$tn,
-                      parallel = parallel)
+                      parallel = parallel,
+                      filetype = filetype)
   
   samp_post <- out[[1]]
   
