@@ -27,7 +27,7 @@ applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
     if(!filetype %in% c("rdata", "rds")) stop("Model files must be either .rds or .rdata")
     
     # strip out the files
-    modFiles <- modFiles[grepl(paste0(filetype,"$"), model_files)] # dollar sign ensures the filepype suffix is at end of name
+    modFiles <- modFiles[grepl(paste0(filetype,"$"), modFiles)] # dollar sign ensures the filepype suffix is at end of name
     
     # retain the species names
     keep <- gsub(patt=paste0("\\.", filetype), repl="", modFiles)
