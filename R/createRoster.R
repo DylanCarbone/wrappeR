@@ -82,7 +82,8 @@ createRoster <- function(index,
     mr_files_ver <- as.numeric(gsub(".csv", "", mr_files_ver))
     
     # load metadata for most recent models
-    mr <- read.csv(paste0("/data-s3/most_recent_meta/", mr_files[which.max(mr_files_ver)]))
+    mr <- read.csv(paste0("/data-s3/most_recent_meta/", mr_files[which.max(mr_files_ver)]),
+                   stringsAsFactors = FALSE)
     
     # small data frame of ver and group
     tdf <- data.frame(ver = ver, group = group)
@@ -95,9 +96,9 @@ createRoster <- function(index,
     
   }
  
-  if (!region %in% c("GB", "UK", "ENGLAND", "SCOTLAND", "WALES", "NORTHERN.IRELAND")) {
+  if (all(region %in% c("GB", "UK", "ENGLAND", "SCOTLAND", "WALES", "NORTHERN.IRELAND", "Anglian", "Humber", "North.West", "Northumbria", "Severn", "Solway.Tweed", "South.East", "South.West", "Thames")) == FALSE) {
     
-    stop("Error: region must be be one of GB, UK, ENGLAND, SCOTLAND, WALES or NORTHERN.IRELAND")
+    stop("Error: all regions must be be one of GB, UK, ENGLAND, SCOTLAND, WALES, NORTHERN.IRELAND, Anglian, Humber, North.West, Northumbria, Severn, Solway.Tweed, South.East, South.West, or Thames")
 
   }
   

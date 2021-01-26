@@ -5,7 +5,7 @@
 #'
 #' @param dat String. Object returned by \code{applyFilters}.
 #' 
-#' @param method String. Which indicator method to use. One of "lambda" or "BMA". 
+#' @param method String. Which indicator method to use. One of "lambda" or "bma". 
 #' 
 #' @param write Logical. Whether or not to write the outputs to  file.
 #'                  
@@ -18,7 +18,7 @@
 #' 
 #' @param ... String. Title for the indicator plot.Additional arguments to be passed to \code{BRCindicators::bma}
 #' 	  
-#' @return An list with elements indicator, short term assessment, long term assessment and plot.
+#' @return A list with elements indicator, short term assessment, long term assessment and plot.
 #'         
 #' @export
 #' 
@@ -33,20 +33,20 @@ calcMSI <- function(dat,
   
   if (!method %in% c("lambda","bma")) stop("Method must be one of lambda or bma")
   
-  colnames(dat)[1:(ncol(dat) -2)] <- gsub("year_", "", colnames(dat[1:(ncol(dat) -2)]))
-  
-  minYr <- as.numeric(colnames(dat)[1])
-  
-  maxYr <- as.numeric(colnames(dat)[ncol(dat) - 2])
-  
   if (method == "lambda") {
+    
+    colnames(dat)[1:(ncol(dat) -2)] <- gsub("year_", "", colnames(dat[1:(ncol(dat) -2)]))
+    
+    minYr <- as.numeric(colnames(dat)[1])
+    
+    maxYr <- as.numeric(colnames(dat)[ncol(dat) - 2])
     
     arr <- sampArray(dat = dat,
                      startYear = minYr,
                      endYear = maxYr)
     
     ind <- BRCindicators::lambda_indicator( 
-      input=arr, 
+      input = arr, 
       index = 100, 
       threshold_sd = Inf, 
       threshold_Rhat = Inf, 
@@ -71,15 +71,31 @@ calcMSI <- function(dat,
     
   } else {
     
-    means <- aggregate(.~species, data=dat, mean)
+    # fudge factor for occupancy as log of 0 is undefined
+    fudgeOcc <- function(x, fudgeFac = 0.0001) {
+      x[x == 0] <- fudgeFac
+      x[x == 1] <- 1 - fudgeFac
+      return(x)
+    }
     
-    sds <- aggregate(.~species, data=dat, sd)
+    # year column names
+    year_cols <- colnames(dat)[grep("year", colnames(dat))]
+    
+    # select necessary columns
+    dat <- dat[, c(year_cols, "species")]
+    
+    # log transform occupancy with adjustment for 1 and 0
+    dat[, year_cols] <- apply(dat[, year_cols], 2, function(x) {log(fudgeOcc(x))})
+    
+    means <- aggregate(. ~ species, data = dat, mean, na.action = na.pass)
+    
+    sds <- aggregate(. ~ species, data = dat, sd, na.action = na.pass)
     
     getSumStats <- function(stat) {
       
       out <- stat[, -ncol(stat)]
       
-      out <- melt(out, 
+      out <- reshape2::melt(out, 
                   id.vars = "species",
                   variable.name = "year",
                   value.name = "index")
@@ -95,10 +111,11 @@ calcMSI <- function(dat,
     inDat <- data.frame(means, 
                         se = se)
     
-    inDat$year <- as.numeric(inDat$year)
+    inDat$year <- as.numeric(gsub("year_", "", inDat$year))
     
-    ind <- bma(data = inDat,
+    ind <- BRCindicators::bma(data = inDat,
                seFromData = TRUE,
+               m.scale = "loge", # default to loge scale, based on log transformation of occupancy above
                ...)
     
     if (bmaInd != "prime") {

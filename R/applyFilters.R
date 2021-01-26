@@ -8,7 +8,7 @@
 #' @param roster String. A dataframe with columns: datPath, modPath, ver, indicator, region,
 #'               nSamps, minObs, write, outPath, clipBy, group (see \code{createRoster}). 
 #'               
-#' @param parallel Boolean. Should the operatoin run in parallel? If so then use n.cores-1.
+#' @param parallel Boolean. Should the operation run in parallel? If so then use n.cores-1.
 #' 	  
 #' @return A dataframe with processed model outputs to be passed to \code{calcMSI}.
 #'         
@@ -16,12 +16,20 @@
 #' 
 
 applyFilters <- function(roster, parallel = TRUE) {
+
+  data(speciesInfo)
   
   if (roster$indicator == "priority") {
+
+    keepInds <- which(!is.na(speciesInfo[, roster$region])) 
     
-    keep <- sampSubset("priority",
-                       inPath = roster$metaPath) 
+    ## use both latin names and concept codes to screen for priority species 
     
+    keep <- c(as.character(speciesInfo$Species[keepInds]), 
+              as.character(speciesInfo$concept[keepInds]))
+
+    keep <- keep[-which(is.na(keep))]
+
   } else if (roster$indicator == "pollinators") {
     
     keep <- sampSubset("pollinators",
@@ -34,20 +42,38 @@ applyFilters <- function(roster, parallel = TRUE) {
     
   }
   
+  first_spp <- keep[[1]]
+  
+  if (substr(first_spp, (nchar(first_spp) + 1) - 2, nchar(first_spp)) %in% c("_1", "_2", "_3")) {
+    
+    keep <- gsub("(.*)_\\w+", "\\1", keep) # remove all after last underscore (e.g., chain "_1")
+    keep <- gsub("(.*)_\\w+", "\\1", keep) # remove all after last underscore (e.g., iteration "_2000")
+    
+    keep <- unique(keep) # unique species names
+    
+  }
+  
+  ## select which species to drop based on scheme advice etc. These are removed by stackFilter
+  
+  drop <- which(!is.na(speciesInfo$Reason_not_included) & speciesInfo$Reason_not_included != "Didn't meet criteria")
+  
+  drop <- c(as.character(speciesInfo$Species[drop]), 
+            as.character(speciesInfo$concept[drop]))
+
   out <- tempSampPost(indata = paste0(roster$modPath, roster$group, "/occmod_outputs/", roster$ver, "/"),
-                            keep = keep,
-                            output_path = NULL,
-                            REGION_IN_Q = paste0("psi.fs.r_", roster$region),
-                            sample_n = roster$nSamps,
-                            group_name = roster$group,
-                            combined_output = TRUE,
-                            #max_year_model = 2018,
-                            #min_year_model = 1970,
-                            write = FALSE,
-                            minObs = roster$minObs,
-                            t0 = roster$t0,
-                            tn = roster$tn,
-                            parallel = parallel)
+                      keep = keep,
+                      output_path = NULL,
+                      REGION_IN_Q = paste0("psi.fs.r_", roster$region),
+                      sample_n = roster$nSamps,
+                      group_name = roster$group,
+                      combined_output = TRUE,
+                      #max_year_model = 2018,
+                      #min_year_model = 1970,
+                      write = FALSE,
+                      minObs = roster$minObs,
+                      t0 = roster$t0,
+                      tn = roster$tn,
+                      parallel = parallel)
   
   samp_post <- out[[1]]
   
@@ -61,20 +87,20 @@ applyFilters <- function(roster, parallel = TRUE) {
     meta[,3] <- min(meta[,3])
     meta[,4] <- max(meta[,4])
   }
-  
+
   stacked_samps <- tempStackFilter(input = "memory",
                                    dat = samp_post,
-                                   indata= NULL,
-                                   output_path=NULL, 
-                                   group_name=paste0(roster$indicator, roster$group), 
-                                   metadata=meta, 
+                                   indata = NULL,
+                                   output_path = NULL, 
+                                   group_name = paste0(roster$indicator, roster$group), 
+                                   metadata = meta, 
                                    region = roster$region,
                                    minObs = roster$minObs, 
                                    maxStartGap = 0, 
                                    maxEndGap = 0,
                                    maxMiddleGap = 10, 
                                    keepSpecies = NULL, 
-                                   removeSpecies = NULL,
+                                   removeSpecies = drop,
                                    ClipFirst = TRUE, 
                                    ClipLast = TRUE)
   

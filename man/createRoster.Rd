@@ -46,7 +46,7 @@ subset species and, if so, based on what. Options are:
 pollinators; and all to return all species in the group.}
 
 \item{region}{A character string or vector of strings. One of "UK", "GB", 
-"England", "Wales", "Scotland", or "NorthernIreland" per 
+"ENGLAND", "WALES", "SCOTLAND", or "NORTHERN.IRELAND" per 
 taxonomic group.}
 
 \item{nSamps}{Numeric or numeric vector. Number of samples to extract from 
