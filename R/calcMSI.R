@@ -93,8 +93,6 @@ calcMSI <- function(dat,
     
     getSumStats <- function(stat) {
       
-      out <- stat[, -ncol(stat)]
-      
       out <- reshape2::melt(out, 
                   id.vars = "species",
                   variable.name = "year",
