@@ -137,7 +137,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
       } else 
         if(abs(diff) <= tolerance){
           # The number of sims is very close to the target, so no need to sample
-          print(paste0("no sampling required: n.sims=", n.sims))
+          print(paste0("no sampling required: n.sims=", out_dat$BUGSoutput$n.sims))
         } else
           stop("Not enough iterations stored. Choose a smaller value of sample_n")
       
