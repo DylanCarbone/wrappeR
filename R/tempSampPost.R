@@ -84,9 +84,9 @@ tempSampPost <- function(indata = "../data/model_runs/",
 
     } else {
       if(filetype == "rds")
-        out_dat <- readRDS(paste0(indata, species, ".rds"))
+        out_dat <- readRDS(paste0(indata, "/", species, ".rds"))
       else if(filetype == "rdata")
-        out_dat <- load_rdata(paste0(indata, species, ".rdata"))
+        out_dat <- load_rdata(paste0(indata, "/", species, ".rdata"))
       out_meta <- out_dat
       
     }
