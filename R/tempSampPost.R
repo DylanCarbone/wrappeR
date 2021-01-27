@@ -98,17 +98,17 @@ tempSampPost <- function(indata = "../data/model_runs/",
     print(nRec)
     print(minObs)
     print(REGION_IN_Q)
-    print(paste0("psi.fs.r_",out$regions))
-    print(!is.null(out$model))
+    print(paste0("psi.fs.r_",out_dat$regions))
+    print(!is.null(out_dat$model))
     
     
     if(nRec >= minObs & # there are enough observations globally (or in region?)
-       REGION_IN_Q %in% paste0("psi.fs.r_",out$regions) & # the species has data in the region of interest 
-       !is.null(out$model) # there is a model object to read from
+       REGION_IN_Q %in% paste0("psi.fs.r_",out_dat$regions) & # the species has data in the region of interest 
+       !is.null(out_dat$model) # there is a model object to read from
        ) { # three conditions are met
-      raw_occ <- data.frame(out$BUGSoutput$sims.list[REGION_IN_Q])
+      raw_occ <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
   
-      colnames(raw_occ) <- paste("year_", out$min_year:out$max_year, sep = "")
+      colnames(raw_occ) <- paste("year_", out_dat$min_year:out_dat$max_year, sep = "")
 
       if(substr(first.spp, (nchar(first.spp) + 1) - 2, nchar(first.spp)) %in% c("_1", "_2", "_3")) {
         
@@ -130,7 +130,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
       # check whether the number of sims is enough to sample 
       # first calculate the difference between n.sims and sample_n.
       # positive numbers indicate we have more than we need
-      diff <- out$BUGSoutput$n.sims - sample_n
+      diff <- out_dat$BUGSoutput$n.sims - sample_n
       if(diff > tolerance){
         # we have more sims in the model than we want, so we need to sample them
         raw_occ <- raw_occ[sample(1:nrow(raw_occ), sample_n),]
