@@ -94,14 +94,6 @@ tempSampPost <- function(indata = "../data/model_runs/",
     nRec <- out_meta$species_observations
     print(paste(species, nRec))
     
-    # temp checks
-    print(nRec)
-    print(minObs)
-    print(REGION_IN_Q)
-    print(paste0("psi.fs.r_",out_dat$regions))
-    print(!is.null(out_dat$model))
-    
-    
     if(nRec >= minObs & # there are enough observations globally (or in region?)
        REGION_IN_Q %in% paste0("psi.fs.r_",out_dat$regions) & # the species has data in the region of interest 
        !is.null(out_dat$model) # there is a model object to read from
@@ -207,17 +199,17 @@ tempSampPost <- function(indata = "../data/model_runs/",
   
   meta <- do.call("rbind", meta)
   
-  #meta <- data.frame(Species = meta$species,
-  #                   n_obs = meta$nRec,
-  #                   min_year_data = meta$first,
-  #                   max_year_data = meta$last,
-  #                   min_year_model = meta$firstMod,
-  #                   max_year_model = meta$lastMod,
-  #                   gap_start = 0,
-  #                   gap_end = 0,
-  #                   gap_middle = meta$gap)
+  meta <- data.frame(Species = meta$species,
+                     n_obs = meta$nRec,
+                     min_year_data = meta$first,
+                     max_year_data = meta$last,
+                     min_year_model = meta$firstMod,
+                     max_year_model = meta$lastMod,
+                     gap_start = 0,
+                     gap_end = 0,
+                     gap_middle = meta$gap)
   
-  #colnames(meta) <- paste0(colnames(meta), "_r_", gsub("psi.fs.r_", "", REGION_IN_Q))
+  colnames(meta) <- paste0(colnames(meta), "_r_", gsub("psi.fs.r_", "", REGION_IN_Q))
   
   if (write == TRUE) {
     save(samp_post, file = paste(output_path, group_name, "_all_spp_sample_", sample_n, "_post_", REGION_IN_Q, ".rdata", sep = ""))
