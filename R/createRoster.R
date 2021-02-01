@@ -125,7 +125,8 @@ createRoster <- function(index,
                                           no = as.character(paste(speciesToKeep, collapse = ','))),
                    clipBy = clipBy,
                    t0 = t0,
-                   tn = tn)
+                   tn = tn,
+                   stringsAsFactors = FALSE)
   
   roster <- split(df, seq(nrow(df)))
   
