@@ -38,6 +38,28 @@ tempSampPost <- function(indata = "../data/model_runs/",
   
   if(substr(first.spp, (nchar(first.spp) + 1) - 2, nchar(first.spp)) %in% c("_1", "_2", "_3")) {
     
+    # function to find minimum iteration for JASMIN models - Tom August
+    findMinIteration <- function(list_of_file_names){
+      
+      if(length(list_of_file_names) < 1) stop('Error: list_of_file_names is empty')
+      if(!is.character(list_of_file_names)) stop('Error: list_of_file_names must be a character')
+      
+      # remove the last number and file extension
+      # find '_' followed by a signal number and a '.' and remove
+      # that and everything that follows
+      # remove '\\..+' if there is no file extension
+      list_of_file_names <- gsub('_[[:digit:]]{1}\\..+$', '', list_of_file_names)
+      
+      # Extract the iterations number
+      iterations <- regmatches(list_of_file_names, regexpr('[[:digit:]]+$', list_of_file_names))
+      
+      # Get minimum
+      return(min(as.numeric(iterations)))
+      
+    }
+    
+    min_iter <- findMinIteration(spp.list)
+    
     spp.list <- gsub("(.*)_\\w+", "\\1", spp.list) # remove all after last underscore (e.g., "_1")
     spp.list <- gsub("(.*)_\\w+", "\\1", spp.list) # remove all after last underscore (e.g., "_2000")
     
@@ -66,21 +88,9 @@ tempSampPost <- function(indata = "../data/model_runs/",
     
     if(substr(first.spp, (nchar(first.spp) + 1) - 2, nchar(first.spp)) %in% c("_1", "_2", "_3")) {
       
-      if(first.spp == "Bry_1_12000_1") { # THIS IS BAD CODING - but no easy way round it
-        
-        out_meta <- load_rdata(paste0(indata, species, "_4000_1.rdata")) # where metadata is stored for bryophyte JASMIN models 
-        
-      } else if(first.spp == "Abrothallus bertianus_10000_1") { # THIS IS BAD CODING - but no easy way round it
-        
-        out_meta <- load_rdata(paste0(indata, species, "_5000_1.rdata")) # where metadata is stored for lichen JASMIN models 
-        
-      }
-      
-      else {
-        
-        out_dat <- load_rdata(paste0(indata, species, "_20000_1.rdata")) # where the first part of the model is stored for JASMIN models
-        out_meta <- load_rdata(paste0(indata, species, "_2000_1.rdata")) # where metadata is stored for JASMIN models 
-        
+      out_dat <- load_rdata(paste0(indata, species, "_20000_1.rdata")) # where the first part of the model is stored for JASMIN models
+      out_meta <- load_rdata(paste0(indata, species, "_", min_iter, "_1.rdata")) # where metadata is stored for JASMIN models
+
       }
 
     } else {
@@ -139,7 +149,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
           # The number of sims is very close to the target, so no need to sample
           print(paste0("no sampling required: n.sims = ", out_dat$BUGSoutput$n.sims))
         } else
-          stop("Not enough iterations stored. Choose a smaller value of sample_n")
+          stop("Error: Not enough iterations stored. Choose a smaller value of sample_n")
       
       colnames(raw_occ) <- paste("year_", out_meta$min_year:out_meta$max_year, sep = "")
 
