@@ -91,9 +91,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
       out_dat <- load_rdata(paste0(indata, species, "_20000_1.rdata")) # where the first part of the model is stored for JASMIN models
       out_meta <- load_rdata(paste0(indata, species, "_", min_iter, "_1.rdata")) # where metadata is stored for JASMIN models
 
-      }
-
-    } else {
+      } else {
       
       if(filetype == "rds")
         
