@@ -51,6 +51,25 @@ applyFilters <- function(roster, parallel = TRUE) {
     keep <- gsub(pattern = paste0("\\.", filetype), repl = "", modFiles)
   }
   
+  # Subset to speciesToKeep
+  if(!is.na(roster$speciesToKeep)){
+    
+    # Convert the comma seperated species names to a vector of species
+    speciesToKeep <- unlist(strsplit(speciesToKeep, ','))
+    
+    # Species not found
+    notFound <- speciesToKeep[!tolower(speciesToKeep) %in% tolower(keep)]
+    
+    if(length(notFound) > 0){
+      warning(paste('some species on your "speciesToKeep" list were not found in the data:',
+                    paste(notFound, collapse = ', ')))
+    }
+    
+    # Subset keep
+    keep <- keep[tolower(keep) %in% tolower(speciesToKeep)]
+    
+  }
+  
   first_spp <- keep[[1]]
   
   if (substr(first_spp, (nchar(first_spp) + 1) - 2, nchar(first_spp)) %in% c("_1", "_2", "_3")) {

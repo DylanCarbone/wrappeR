@@ -16,6 +16,7 @@ createRoster(
   minObs = 50,
   write,
   outPath,
+  speciesToKeep = NA,
   clipBy = "species",
   t0,
   tn
@@ -61,6 +62,10 @@ written as a .rdata file to outPath.}
 
 \item{outPath}{A character string or vector of strings. Location to store 
 the outputs if write = TRUE.}
+
+\item{speciesToKeep}{A character vector of strings. the names of species to
+include, this is used in combination with 'indicator'. ONLY species on both
+lists will be included on the output.}
 
 \item{clipBy}{A character string or vector of strings. One of "species" or 
 "group" indicating whether to clip outputs by the first and 

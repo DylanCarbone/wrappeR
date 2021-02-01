@@ -1,7 +1,21 @@
+#' \code{createMetadata} - Create master metadata table from objectstore data
+#' repository
+#' 
+#' @description This function create 
+#'
+#' @param file_location Path to root directory of occupancy models on object
+#'  store
+#' 
+#' @return Dataframe of metadata
+#' 
+#' @import dplyr
+#' @import pbapply
+#' @import stringr
+#'         
+#' @export
+
 createMetadata <- function(file_location){
-  library(dplyr)
-  library(pbapply)
-  library(stringr)
+ 
   metadata <- lapply(list.files(file_location), function(taxa){
     cat('Creating metadata for',taxa,'\n')
     data_types <- list.files(file.path(file_location, taxa))
