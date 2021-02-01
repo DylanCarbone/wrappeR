@@ -55,7 +55,7 @@ applyFilters <- function(roster, parallel = TRUE) {
   if(!is.na(roster$speciesToKeep)){
     
     # Convert the comma seperated species names to a vector of species
-    speciesToKeep <- unlist(strsplit(speciesToKeep, ','))
+    speciesToKeep <- unlist(strsplit(roster$speciesToKeep, ','))
     
     # Species not found
     notFound <- speciesToKeep[!tolower(speciesToKeep) %in% tolower(keep)]
