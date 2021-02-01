@@ -9,6 +9,7 @@
 
 tempSampPost <- function(indata = "../data/model_runs/", 
                          keep,
+                         chained,
                          output_path = "../data/sampled_posterior_1000/",
                          REGION_IN_Q = "psi.fs",
                          sample_n = 1000,
@@ -29,14 +30,11 @@ tempSampPost <- function(indata = "../data/model_runs/",
   
   ### set up species list we want to loop though ###
   
-  spp.list <- list.files(indata, 
-                         pattern = paste0(filetype,"$")) # species for which we have models
-  spp.list <- gsub(pattern = paste0(".", filetype), "", spp.list)
-  
   # to identify if the models are JASMIN based
-  first.spp <- spp.list[[1]]
+  first.spp <- keep[[1]]
   
-  if(substr(first.spp, (nchar(first.spp) + 1) - 2, nchar(first.spp)) %in% c("_1", "_2", "_3")) {
+  # extract minimum iteration number for chained models
+  if(chained == TRUE) {
     
     # function to find minimum iteration for JASMIN models - Tom August
     findMinIteration <- function(list_of_file_names){
@@ -60,14 +58,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
     
     min_iter <- findMinIteration(spp.list)
     
-    spp.list <- gsub("(.*)_\\w+", "\\1", spp.list) # remove all after last underscore (e.g., "_1")
-    spp.list <- gsub("(.*)_\\w+", "\\1", spp.list) # remove all after last underscore (e.g., "_2000")
-    
-    spp.list <- unique(spp.list) # unique species names
-    
   }
-  
-  spp.list <- spp.list[tolower(spp.list) %in% tolower(keep)]
   
   samp_post <- NULL # create the stacked variable, will be used if combined_output is TRUE.
   
@@ -82,25 +73,29 @@ tempSampPost <- function(indata = "../data/model_runs/",
   
   combineSamps <- function(species, minObs) { 
     # NJBI this function refers to several global variables, e.g. tn - not good practice
-    #print(species)
+    
     out <- NULL
     raw_occ <- NULL
     
-    if(substr(first.spp, (nchar(first.spp) + 1) - 2, nchar(first.spp)) %in% c("_1", "_2", "_3")) {
+    if(chained = TRUE) {
+      
+      # chained models
       
       out_dat <- load_rdata(paste0(indata, species, "_20000_1.rdata")) # where the first part of the model is stored for JASMIN models
       out_meta <- load_rdata(paste0(indata, species, "_", min_iter, "_1.rdata")) # where metadata is stored for JASMIN models
 
       } else {
       
-      if(filetype == "rds")
+        # non-chained models
         
-        out_dat <- readRDS(paste0(indata, species, ".rds"))
+        if(filetype == "rds")
       
-      else if(filetype == "rdata")
-        
-        out_dat <- load_rdata(paste0(indata, species, ".rdata"))
-        out_meta <- out_dat
+          out_dat <- readRDS(paste0(indata, species, ".rds"))
+    
+        else if(filetype == "rdata")
+          
+          out_dat <- load_rdata(paste0(indata, species, ".rdata"))
+          out_meta <- out_dat
       
     }
     

@@ -31,7 +31,7 @@ applyClipping <- function(data, parallel = TRUE, clipBy = "group") {
   stacked_samps <- tempStackFilter(input = "memory",
                                    dat = data$samp_post,
                                    indata = NULL,
-                                   output_path=NULL, 
+                                   output_path = NULL, 
                                    group_name = paste0(data$indicator, data$group), 
                                    metadata = data$meta, 
                                    region = data$region,
@@ -44,11 +44,10 @@ applyClipping <- function(data, parallel = TRUE, clipBy = "group") {
                                    ClipFirst = TRUE, 
                                    ClipLast = TRUE)
   
-  # are we ever going to want to do this within wrappeR?
-  #if (roster$write == TRUE) {
-  #  save(stacked_samps, file = paste0(roster$outPath, roster$group, "_", roster$indicator, 
-  #                                    "_", roster$region, ".rdata"))
-  #}
+  if (roster$write == TRUE) {
+   save(stacked_samps, file = paste0(roster$outPath, roster$group, "_", roster$indicator,
+                                     "_", roster$region, ".rdata"))
+  }
   
   return(stacked_samps)
 }
