@@ -32,12 +32,34 @@ tempSampPost <- function(indata = "../data/model_runs/",
   
   spp.list <- list.files(indata, 
                          pattern = paste0(filetype,"$")) # species for which we have models
-  spp.list <- gsub(patt=paste0(".",filetype), "", spp.list)
+  spp.list <- gsub(pattern = paste0(".", filetype), "", spp.list)
   
   # to identify if the models are JASMIN based
   first.spp <- spp.list[[1]]
   
   if(substr(first.spp, (nchar(first.spp) + 1) - 2, nchar(first.spp)) %in% c("_1", "_2", "_3")) {
+    
+    # function to find minimum iteration for JASMIN models - Tom August
+    findMinIteration <- function(list_of_file_names){
+      
+      if(length(list_of_file_names) < 1) stop('Error: list_of_file_names is empty')
+      if(!is.character(list_of_file_names)) stop('Error: list_of_file_names must be a character')
+      
+      # remove the last number and file extension
+      # find '_' followed by a signal number and a '.' and remove
+      # that and everything that follows
+      # remove '\\..+' if there is no file extension
+      list_of_file_names <- gsub('_[[:digit:]]{1}$', '', list_of_file_names)
+      
+      # Extract the iterations number
+      iterations <- regmatches(list_of_file_names, regexpr('[[:digit:]]+$', list_of_file_names))
+      
+      # Get minimum
+      return(min(as.numeric(iterations)))
+      
+    }
+    
+    min_iter <- findMinIteration(spp.list)
     
     spp.list <- gsub("(.*)_\\w+", "\\1", spp.list) # remove all after last underscore (e.g., "_1")
     spp.list <- gsub("(.*)_\\w+", "\\1", spp.list) # remove all after last underscore (e.g., "_2000")
@@ -67,28 +89,19 @@ tempSampPost <- function(indata = "../data/model_runs/",
     
     if(substr(first.spp, (nchar(first.spp) + 1) - 2, nchar(first.spp)) %in% c("_1", "_2", "_3")) {
       
-      if(first.spp == "Bry_1_12000_1") { # THIS IS BAD CODING - but no easy way round it
-        
-        out_meta <- load_rdata(paste0(indata, species, "_4000_1.rdata")) # where metadata is stored for bryophyte JASMIN models 
-        
-      } else if(first.spp == "Abrothallus bertianus_10000_1") { # THIS IS BAD CODING - but no easy way round it
-        
-        out_meta <- load_rdata(paste0(indata, species, "_5000_1.rdata")) # where metadata is stored for lichen JASMIN models 
-        
-      }
-      
-      else {
-        
-        out_meta <- load_rdata(paste0(indata, species, "_2000_1.rdata")) # where metadata is stored for JASMIN models 
-        
-      }
+      out_dat <- load_rdata(paste0(indata, species, "_20000_1.rdata")) # where the first part of the model is stored for JASMIN models
+      out_meta <- load_rdata(paste0(indata, species, "_", min_iter, "_1.rdata")) # where metadata is stored for JASMIN models
 
-    } else {
+      } else {
+      
       if(filetype == "rds")
-        out_dat <- readRDS(paste0(indata, "/", species, ".rds"))
+        
+        out_dat <- readRDS(paste0(indata, species, ".rds"))
+      
       else if(filetype == "rdata")
-        out_dat <- load_rdata(paste0(indata, "/", species, ".rdata"))
-      out_meta <- out_dat
+        
+        out_dat <- load_rdata(paste0(indata, species, ".rdata"))
+        out_meta <- out_dat
       
     }
     
@@ -96,9 +109,10 @@ tempSampPost <- function(indata = "../data/model_runs/",
     print(paste(species, nRec))
     
     if(nRec >= minObs & # there are enough observations globally (or in region?)
-       REGION_IN_Q %in% paste0("psi.fs.r_",out_dat$regions) & # the species has data in the region of interest 
+       REGION_IN_Q %in% paste0("psi.fs.r_", out_dat$regions) & # the species has data in the region of interest 
        !is.null(out_dat$model) # there is a model object to read from
        ) { # three conditions are met
+      
       raw_occ <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
   
       colnames(raw_occ) <- paste("year_", out_dat$min_year:out_dat$max_year, sep = "")
@@ -117,7 +131,9 @@ tempSampPost <- function(indata = "../data/model_runs/",
         rm(raw_occ1, raw_occ2, raw_occ3)
         
       } else {
+        
         raw_occ <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
+        
       }
       
       # check whether the number of sims is enough to sample 
@@ -130,9 +146,9 @@ tempSampPost <- function(indata = "../data/model_runs/",
       } else 
         if(abs(diff) <= tolerance){
           # The number of sims is very close to the target, so no need to sample
-          print(paste0("no sampling required: n.sims=", out_dat$BUGSoutput$n.sims))
+          print(paste0("no sampling required: n.sims = ", out_dat$BUGSoutput$n.sims))
         } else
-          stop("Not enough iterations stored. Choose a smaller value of sample_n")
+          stop("Error: Not enough iterations stored. Choose a smaller value of sample_n")
       
       colnames(raw_occ) <- paste("year_", out_meta$min_year:out_meta$max_year, sep = "")
 
