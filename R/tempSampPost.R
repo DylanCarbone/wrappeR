@@ -77,7 +77,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
     out <- NULL
     raw_occ <- NULL
     
-    if(chained = TRUE) {
+    if(chained == TRUE) {
       
       # chained models
       
