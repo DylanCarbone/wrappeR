@@ -42,27 +42,22 @@ applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
     keep <- gsub(pattern = paste0("\\.", filetype), repl = "", modFiles)
   }
   
-  first_spp <- keep[[1]]
-  
+  # test if first species is chained (i.e., JASMIN models)
   if (substr(first_spp, (nchar(first_spp) + 1) - 2, nchar(first_spp)) %in% c("_1", "_2", "_3")) {
+    
+    chained <- TRUE
     
     keep <- gsub("(.*)_\\w+", "\\1", keep) # remove all after last underscore (e.g., chain "_1")
     keep <- gsub("(.*)_\\w+", "\\1", keep) # remove all after last underscore (e.g., iteration "_2000")
     
     keep <- unique(keep) # unique species names
     
-  }
-  
-  ## select which species to drop based on scheme advice etc. These are removed by stackFilter
-  
-  drop <- which(!is.na(speciesInfo$Reason_not_included) & speciesInfo$Reason_not_included != "Didn't meet criteria")
-  
-  drop <- c(as.character(speciesInfo$Species[drop]), 
-            as.character(speciesInfo$concept[drop]))
+  } else chained <- FALSE
   
   if(sample == TRUE)
     out <- tempSampPost(indata = paste0(roster$modPath, roster$group, "/occmod_outputs/", roster$ver, "/"),
                         keep = keep,
+                        chained = chained,
                         output_path = NULL,
                         REGION_IN_Q = paste0("psi.fs.r_", roster$region),
                         sample_n = roster$nSamps,

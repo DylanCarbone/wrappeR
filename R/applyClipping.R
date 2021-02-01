@@ -20,13 +20,22 @@
 applyClipping <- function(data, parallel = TRUE, clipBy = "group") {
   # parallel argument currently not used
   
-    if (clipBy == "group" | data$clipBy != "species") { 
-      # check that this arrangement makes sense
-      # I think it's ok, given only two possibilities. Group overrides......
-      data$meta[,3] <- min(data$meta[,3])
-      data$meta[,4] <- max(data$meta[,4])
+  data(speciesInfo)
+  
+  if (clipBy == "group" | data$clipBy != "species") { 
+    # check that this arrangement makes sense
+    # I think it's ok, given only two possibilities. Group overrides......
+    data$meta[,3] <- min(data$meta[,3])
+    data$meta[,4] <- max(data$meta[,4])
+    
     }
 
+  ## select which species to drop based on scheme advice etc. These are removed by stackFilter
+  
+  drop <- which(!is.na(speciesInfo$Reason_not_included) & speciesInfo$Reason_not_included != "Didn't meet criteria")
+  
+  drop <- c(as.character(speciesInfo$Species[drop]), 
+            as.character(speciesInfo$concept[drop]))
   
   stacked_samps <- tempStackFilter(input = "memory",
                                    dat = data$samp_post,
@@ -40,7 +49,7 @@ applyClipping <- function(data, parallel = TRUE, clipBy = "group") {
                                    maxEndGap = 0,
                                    maxMiddleGap = 10, 
                                    keepSpecies = NULL, 
-                                   removeSpecies = NULL,
+                                   removeSpecies = drop,
                                    ClipFirst = TRUE, 
                                    ClipLast = TRUE)
   
