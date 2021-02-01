@@ -10,7 +10,7 @@ applyFilters(roster, parallel = TRUE)
 \item{roster}{String. A dataframe with columns: datPath, modPath, ver, indicator, region,
 nSamps, minObs, write, outPath, clipBy, group (see \code{createRoster}).}
 
-\item{parallel}{Boolean. Should the operatoin run in parallel? If so then use n.cores-1.}
+\item{parallel}{Boolean. Should the operation run in parallel? If so then use n.cores-1.}
 }
 \value{
 A dataframe with processed model outputs to be passed to \code{calcMSI}.

@@ -12,6 +12,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
                          output_path = "../data/sampled_posterior_1000/",
                          REGION_IN_Q = "psi.fs",
                          sample_n = 1000,
+                         tolerance = 3, # number of iterations above or below sample_n to be acceptable
                          group_name = "",
                          combined_output = TRUE,
                          max_year_model = NULL, 
@@ -21,16 +22,16 @@ tempSampPost <- function(indata = "../data/model_runs/",
                          t0, 
                          tn,
                          parallel = TRUE,
-                         n.cores = NULL){
+                         n.cores = NULL,
+                         filetype = "rdata"){
   
   if(parallel & is.null(n.cores)) n.cores <- parallel::detectCores() - 1
   
   ### set up species list we want to loop though ###
   
   spp.list <- list.files(indata, 
-                         pattern = ".rdata") # species for which we have models
-  
-  spp.list <- gsub(".rdata", "", spp.list)
+                         pattern = paste0(filetype,"$")) # species for which we have models
+  spp.list <- gsub(patt=paste0(".",filetype), "", spp.list)
   
   # to identify if the models are JASMIN based
   first.spp <- spp.list[[1]]
@@ -82,8 +83,10 @@ tempSampPost <- function(indata = "../data/model_runs/",
       }
 
     } else {
-      
-      out_dat <- load_rdata(paste0(indata, species, ".rdata"))
+      if(filetype == "rds")
+        out_dat <- readRDS(paste0(indata, "/", species, ".rds"))
+      else if(filetype == "rdata")
+        out_dat <- load_rdata(paste0(indata, "/", species, ".rdata"))
       out_meta <- out_dat
       
     }
@@ -91,8 +94,14 @@ tempSampPost <- function(indata = "../data/model_runs/",
     nRec <- out_meta$species_observations
     print(paste(species, nRec))
     
-    if(nRec >= minObs) {
-      
+    if(nRec >= minObs & # there are enough observations globally (or in region?)
+       REGION_IN_Q %in% paste0("psi.fs.r_",out_dat$regions) & # the species has data in the region of interest 
+       !is.null(out_dat$model) # there is a model object to read from
+       ) { # three conditions are met
+      raw_occ <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
+  
+      colnames(raw_occ) <- paste("year_", out_dat$min_year:out_dat$max_year, sep = "")
+
       if(substr(first.spp, (nchar(first.spp) + 1) - 2, nchar(first.spp)) %in% c("_1", "_2", "_3")) {
         
         out_dat <- load_rdata(paste0(indata, species, "_20000_1.rdata")) # where occupancy data is stored for JASMIN models 
@@ -107,13 +116,25 @@ tempSampPost <- function(indata = "../data/model_runs/",
         rm(raw_occ1, raw_occ2, raw_occ3)
         
       } else {
-        
         raw_occ <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
-        
       }
       
-      raw_occ <- raw_occ[sample(1:nrow(raw_occ), sample_n),]
+      # check whether the number of sims is enough to sample 
+      # first calculate the difference between n.sims and sample_n.
+      # positive numbers indicate we have more than we need
+      diff <- out_dat$BUGSoutput$n.sims - sample_n
+      if(diff > tolerance){
+        # we have more sims in the model than we want, so we need to sample them
+        raw_occ <- raw_occ[sample(1:nrow(raw_occ), sample_n),]
+      } else 
+        if(abs(diff) <= tolerance){
+          # The number of sims is very close to the target, so no need to sample
+          print(paste0("no sampling required: n.sims=", out_dat$BUGSoutput$n.sims))
+        } else
+          stop("Not enough iterations stored. Choose a smaller value of sample_n")
+      
       colnames(raw_occ) <- paste("year_", out_meta$min_year:out_meta$max_year, sep = "")
+
       raw_occ$iteration <- 1:sample_n
       raw_occ$species <- species
       
