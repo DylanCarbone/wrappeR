@@ -99,8 +99,8 @@ tempSampPost <- function(indata = "../data/model_runs/",
     print(paste(species, nRec))
     
     if(nRec >= minObs & # there are enough observations globally (or in region?)
-       REGION_IN_Q %in% paste0("psi.fs.r_", out_dat$regions) & # the species has data in the region of interest 
-       !is.null(out_dat$model) # there is a model object to read from
+       REGION_IN_Q %in% paste0("psi.fs.r_", out_meta$regions) & # the species has data in the region of interest 
+       !is.null(out_meta$model) # there is a model object to read from
        ) { # three conditions are met
       
       raw_occ <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
