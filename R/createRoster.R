@@ -122,7 +122,7 @@ createRoster <- function(index,
                    outPath = outPath,
                    speciesToKeep = ifelse(test = is.na(speciesToKeep), 
                                           yes = NA, 
-                                          no = paste(speciesToKeep, collapse = ',')),
+                                          no = as.character(paste(speciesToKeep, collapse = ','))),
                    clipBy = clipBy,
                    t0 = t0,
                    tn = tn)
