@@ -137,27 +137,30 @@ extractMeta <- function(inPath, group, outPath, write, region) {
 
 
 
-sampArray <- function(dat, startYear, endYear, niter) {
+sampArray <- function(dat, startYear, endYear) {
   
-  combined.df <- dat
+  #combined.df <- dat
   
-  combined.df <- combined.df[,-ncol(combined.df)]
+  #combined.df <- combined.df[,-ncol(combined.df)]
   
-  combined.df$iteration <- as.numeric(combined.df$iteration)
+  #combined.df$iteration <- as.numeric(combined.df$iteration)
   
-  arr <- simplify2array(by(combined.df, combined.df$iteration, as.matrix))
+  #arr <- simplify2array(by(combined.df, combined.df$iteration, as.matrix))
+  #print(str(arr))
+
+  arr <- reshape2::acast(melt(dat, id=c("iteration", "species")), 
+               species ~ variable ~iteration,
+               value.var = "value")
   
-  print(str(arr))
+  start <- (startYear - startYear) + 1
   
-  start <- (startYear - 1970) + 1
-  
-  end <- (endYear - 1970) + 1
+  end <- (endYear - startYear) + 1
   
   arr <- arr[,start:end,]
   
-  dimnames(arr)[[1]] <- 1:length(dimnames(arr)[[1]])
+  #dimnames(arr)[[1]] <- 1:length(dimnames(arr)[[1]])
   
-  dimnames(arr)[[2]] <- 1:length(dimnames(arr)[[2]])
+  #dimnames(arr)[[2]] <- 1:length(dimnames(arr)[[2]])
   
   return(arr)
   

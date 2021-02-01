@@ -107,7 +107,9 @@ tempStackFilter <- function (input = "memory", dat = NULL, indata = NULL, output
       }
     }
     else {
-      for (i in spp_list) {
+      for (i in spp_list) { 
+        # this counter-intuitively loops over every iteration, not every species
+        # although the syntax is clunky and ugly, it does turn years prior to first observation to NA
         min_year_data <- metadata[metadata$Species == 
                                     i, paste0("min_year_data_r_", region)]
         min_year_model <- metadata[metadata$Species == 

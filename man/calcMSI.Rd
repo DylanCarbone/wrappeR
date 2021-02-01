@@ -9,7 +9,7 @@ calcMSI(dat, method, write, outPath, plotLabel, bmaInd = NULL, ...)
 \arguments{
 \item{dat}{String. Object returned by \code{applyFilters}.}
 
-\item{method}{String. Which indicator method to use. One of "lambda" or "BMA".}
+\item{method}{String. Which indicator method to use. One of "lambda" or "bma".}
 
 \item{write}{Logical. Whether or not to write the outputs to  file.}
 
@@ -23,7 +23,7 @@ calcMSI(dat, method, write, outPath, plotLabel, bmaInd = NULL, ...)
 \item{...}{String. Title for the indicator plot.Additional arguments to be passed to \code{BRCindicators::bma}}
 }
 \value{
-An list with elements indicator, short term assessment, long term assessment and plot.
+A list with elements indicator, short term assessment, long term assessment and plot.
 }
 \description{
 This function takes the output of \code{applyFilters} and produces a multispecies indicator
