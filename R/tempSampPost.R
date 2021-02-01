@@ -31,7 +31,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
   
   spp.list <- list.files(indata, 
                          pattern = paste0(filetype,"$")) # species for which we have models
-  spp.list <- gsub(pattern = paste0(".",filetype), "", spp.list)
+  spp.list <- gsub(pattern = paste0(".", filetype), "", spp.list)
   
   # to identify if the models are JASMIN based
   first.spp <- spp.list[[1]]
@@ -78,6 +78,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
       
       else {
         
+        out_dat <- load_rdata(paste0(indata, species, "_20000_1.rdata")) # where the first part of the model is stored for JASMIN models
         out_meta <- load_rdata(paste0(indata, species, "_2000_1.rdata")) # where metadata is stored for JASMIN models 
         
       }
@@ -99,8 +100,8 @@ tempSampPost <- function(indata = "../data/model_runs/",
     print(paste(species, nRec))
     
     if(nRec >= minObs & # there are enough observations globally (or in region?)
-       REGION_IN_Q %in% paste0("psi.fs.r_", out_meta$regions) & # the species has data in the region of interest 
-       !is.null(out_meta$model) # there is a model object to read from
+       REGION_IN_Q %in% paste0("psi.fs.r_", out_dat$regions) & # the species has data in the region of interest 
+       !is.null(out_dat$model) # there is a model object to read from
        ) { # three conditions are met
       
       raw_occ <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
@@ -121,7 +122,9 @@ tempSampPost <- function(indata = "../data/model_runs/",
         rm(raw_occ1, raw_occ2, raw_occ3)
         
       } else {
+        
         raw_occ <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
+        
       }
       
       # check whether the number of sims is enough to sample 
@@ -134,7 +137,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
       } else 
         if(abs(diff) <= tolerance){
           # The number of sims is very close to the target, so no need to sample
-          print(paste0("no sampling required: n.sims=", out_dat$BUGSoutput$n.sims))
+          print(paste0("no sampling required: n.sims = ", out_dat$BUGSoutput$n.sims))
         } else
           stop("Not enough iterations stored. Choose a smaller value of sample_n")
       
