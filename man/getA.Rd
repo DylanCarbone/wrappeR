@@ -2,7 +2,7 @@
 % Please edit documentation in R/getA.R
 \name{getA}
 \alias{getA}
-\title{\code{applyFilters} - Extracts the "a" parameter from occupancy model outputs.}
+\title{\code{getA} - Extracts the "a" parameter from occupancy model outputs.}
 \usage{
 getA(
   indata = "../data/model_runs/",
