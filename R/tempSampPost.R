@@ -31,7 +31,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
   
   spp.list <- list.files(indata, 
                          pattern = paste0(filetype,"$")) # species for which we have models
-  spp.list <- gsub(patt=paste0(".",filetype), "", spp.list)
+  spp.list <- gsub(pattern = paste0(".",filetype), "", spp.list)
   
   # to identify if the models are JASMIN based
   first.spp <- spp.list[[1]]
@@ -83,11 +83,15 @@ tempSampPost <- function(indata = "../data/model_runs/",
       }
 
     } else {
+      
       if(filetype == "rds")
-        out_dat <- readRDS(paste0(indata, "/", species, ".rds"))
+        
+        out_dat <- readRDS(paste0(indata, species, ".rds"))
+      
       else if(filetype == "rdata")
-        out_dat <- load_rdata(paste0(indata, "/", species, ".rdata"))
-      out_meta <- out_dat
+        
+        out_dat <- load_rdata(paste0(indata, species, ".rdata"))
+        out_meta <- out_dat
       
     }
     
@@ -95,9 +99,10 @@ tempSampPost <- function(indata = "../data/model_runs/",
     print(paste(species, nRec))
     
     if(nRec >= minObs & # there are enough observations globally (or in region?)
-       REGION_IN_Q %in% paste0("psi.fs.r_",out_dat$regions) & # the species has data in the region of interest 
+       REGION_IN_Q %in% paste0("psi.fs.r_", out_dat$regions) & # the species has data in the region of interest 
        !is.null(out_dat$model) # there is a model object to read from
        ) { # three conditions are met
+      
       raw_occ <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
   
       colnames(raw_occ) <- paste("year_", out_dat$min_year:out_dat$max_year, sep = "")

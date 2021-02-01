@@ -36,6 +36,7 @@ applyFilters <- function(roster, parallel = TRUE) {
                        inPath = roster$metaPath)
     
   } else {
+    
     modFilePath <- file.path(roster$modPath, roster$group, "occmod_outputs", roster$ver)
     modFiles <- list.files(modFilePath)
     
@@ -47,7 +48,7 @@ applyFilters <- function(roster, parallel = TRUE) {
     modFiles <- modFiles[grepl(paste0(filetype,"$"), modFiles)] # dollar sign ensures the filepype suffix is at end of name
     
     # retain the species names
-    keep <- gsub(patt=paste0("\\.", filetype), repl="", modFiles)
+    keep <- gsub(pattern = paste0("\\.", filetype), repl = "", modFiles)
   }
   
   first_spp <- keep[[1]]
