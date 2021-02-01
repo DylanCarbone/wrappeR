@@ -48,11 +48,11 @@ applyFilters <- function(roster, parallel = TRUE) {
     modFiles <- modFiles[grepl(paste0(filetype, "$"), modFiles)] # dollar sign ensures the filetype suffix is at end of name
     
     # retain the species names (with iteration number if applicable)
-    keep <- gsub(pattern = paste0("\\.", filetype), repl = "", modFiles)
+    keep_iter <- gsub(pattern = paste0("\\.", filetype), repl = "", modFiles)
   }
   
   # first species
-  first_spp <- keep[[1]]
+  first_spp <- keep_iter[[1]]
   
   # test if first species is chained (i.e., JASMIN models)
   if (substr(first_spp, (nchar(first_spp) + 1) - 2, nchar(first_spp)) %in% c("_1", "_2", "_3")) {
@@ -64,7 +64,14 @@ applyFilters <- function(roster, parallel = TRUE) {
     
     keep <- unique(keep) # unique species names
     
-  } else chained <- FALSE
+  } else {
+    
+    chained <- FALSE
+    
+    # species names don't have associated iteration numbers
+    keep <- keep_iter
+    
+  }
   
   ## select which species to drop based on scheme advice etc. These are removed by stackFilter
   
@@ -75,7 +82,9 @@ applyFilters <- function(roster, parallel = TRUE) {
 
   out <- tempSampPost(indata = paste0(roster$modPath, roster$group, "/occmod_outputs/", roster$ver, "/"),
                       keep = keep,
-                      chained = chained,
+                      keep_iter = ifelse(chained = TRUE,
+                                         keep_iter, 
+                                         NULL),
                       output_path = NULL,
                       REGION_IN_Q = paste0("psi.fs.r_", roster$region),
                       sample_n = roster$nSamps,

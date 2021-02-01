@@ -8,8 +8,8 @@
 #' @export
 
 tempSampPost <- function(indata = "../data/model_runs/", 
-                         keep,
-                         chained,
+                         keep, # species to keep
+                         keep_iter, # species to keep with iteration numbers
                          output_path = "../data/sampled_posterior_1000/",
                          REGION_IN_Q = "psi.fs",
                          sample_n = 1000,
@@ -30,11 +30,8 @@ tempSampPost <- function(indata = "../data/model_runs/",
   
   ### set up species list we want to loop though ###
   
-  # to identify if the models are JASMIN based
-  first.spp <- keep[[1]]
-  
   # extract minimum iteration number for chained models
-  if(chained == TRUE) {
+  if(!is.null(keep_iter)) {
     
     # function to find minimum iteration for JASMIN models - Tom August
     findMinIteration <- function(list_of_file_names){
@@ -45,7 +42,6 @@ tempSampPost <- function(indata = "../data/model_runs/",
       # remove the last number and file extension
       # find '_' followed by a signal number and a '.' and remove
       # that and everything that follows
-      # remove '\\..+' if there is no file extension
       list_of_file_names <- gsub('_[[:digit:]]{1}$', '', list_of_file_names)
       
       # Extract the iterations number
@@ -56,7 +52,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
       
     }
     
-    min_iter <- findMinIteration(keep)
+    min_iter <- findMinIteration(keep_iter)
     
   }
   
@@ -77,7 +73,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
     out <- NULL
     raw_occ <- NULL
     
-    if(chained == TRUE) {
+    if(!is.null(keep_iter)) {
       
       # chained models
       
@@ -111,7 +107,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
   
       colnames(raw_occ) <- paste("year_", out_dat$min_year:out_dat$max_year, sep = "")
 
-      if(substr(first.spp, (nchar(first.spp) + 1) - 2, nchar(first.spp)) %in% c("_1", "_2", "_3")) {
+      if(!is.null(keep_iter)) {
         
         out_dat <- load_rdata(paste0(indata, species, "_20000_1.rdata")) # where occupancy data is stored for JASMIN models 
         raw_occ1 <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
@@ -135,13 +131,18 @@ tempSampPost <- function(indata = "../data/model_runs/",
       # positive numbers indicate we have more than we need
       diff <- out_dat$BUGSoutput$n.sims - sample_n
       if(diff > tolerance){
+        
         # we have more sims in the model than we want, so we need to sample them
-        raw_occ <- raw_occ[sample(1:nrow(raw_occ), sample_n),]
+        raw_occ <- raw_occ[sample(1:nrow(raw_occ), sample_n), ]
+        
       } else 
+        
         if(abs(diff) <= tolerance){
           # The number of sims is very close to the target, so no need to sample
           print(paste0("no sampling required: n.sims = ", out_dat$BUGSoutput$n.sims))
+        
         } else
+          
           stop("Error: Not enough iterations stored. Choose a smaller value of sample_n")
       
       colnames(raw_occ) <- paste("year_", out_meta$min_year:out_meta$max_year, sep = "")
