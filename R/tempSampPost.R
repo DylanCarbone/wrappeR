@@ -48,7 +48,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
       # find '_' followed by a signal number and a '.' and remove
       # that and everything that follows
       # remove '\\..+' if there is no file extension
-      list_of_file_names <- gsub('_[[:digit:]]{1}\\..+$', '', list_of_file_names)
+      list_of_file_names <- gsub('_[[:digit:]]{1}$', '', list_of_file_names)
       
       # Extract the iterations number
       iterations <- regmatches(list_of_file_names, regexpr('[[:digit:]]+$', list_of_file_names))
