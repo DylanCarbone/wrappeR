@@ -82,7 +82,7 @@ applyFilters <- function(roster, parallel = TRUE) {
 
   out <- tempSampPost(indata = paste0(roster$modPath, roster$group, "/occmod_outputs/", roster$ver, "/"),
                       keep = keep,
-                      keep_iter = ifelse(chained = TRUE,
+                      keep_iter = ifelse(chained == TRUE,
                                          keep_iter, 
                                          NULL),
                       output_path = NULL,
