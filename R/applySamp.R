@@ -30,7 +30,7 @@ applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
     modFiles <- modFiles[grepl(paste0(filetype,"$"), modFiles)] # dollar sign ensures the filepype suffix is at end of name
     
     # retain the species names
-    keep <- gsub(patt=paste0("\\.", filetype), repl="", modFiles)
+    keep <- gsub(pattern = paste0("\\.", filetype), repl = "", modFiles)
   }
   
   if(sample)
