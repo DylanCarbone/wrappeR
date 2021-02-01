@@ -56,7 +56,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
       
     }
     
-    min_iter <- findMinIteration(spp.list)
+    min_iter <- findMinIteration(keep)
     
   }
   
@@ -190,9 +190,9 @@ tempSampPost <- function(indata = "../data/model_runs/",
     } else return(NULL)
   }
   
-  if(parallel) outputs <- parallel::mclapply(spp.list, mc.cores = n.cores,
+  if(parallel) outputs <- parallel::mclapply(keep, mc.cores = n.cores,
                                              combineSamps, minObs = minObs)
-  else outputs <- lapply(spp.list, 
+  else outputs <- lapply(keep, 
                          combineSamps, minObs = minObs)
   
   
