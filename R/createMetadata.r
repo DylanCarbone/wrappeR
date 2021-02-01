@@ -1,6 +1,7 @@
 createMetadata <- function(file_location){
   library(dplyr)
   library(pbapply)
+  library(stringr)
   metadata <- lapply(list.files(file_location), function(taxa){
     cat('Creating metadata for',taxa,'\n')
     data_types <- list.files(file.path(file_location, taxa))
