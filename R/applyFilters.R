@@ -59,7 +59,7 @@ applyFilters <- function(roster, parallel = TRUE) {
     
     chained <- TRUE
     
-    keep <- gsub("(.*)_\\w+", "\\1", keep) # remove all after last underscore (e.g., chain "_1")
+    keep <- gsub("(.*)_\\w+", "\\1", keep_iter) # remove all after last underscore (e.g., chain "_1")
     keep <- gsub("(.*)_\\w+", "\\1", keep) # remove all after last underscore (e.g., iteration "_2000")
     
     keep <- unique(keep) # unique species names
