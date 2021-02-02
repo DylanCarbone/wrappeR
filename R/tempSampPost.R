@@ -98,7 +98,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
     }
     
     nRec <- out_meta$species_observations
-    print(paste(species, nRec))
+    print(paste("load:", species, "records:", nRec))
     
     if(nRec >= minObs & # there are enough observations globally (or in region?)
        REGION_IN_Q %in% paste0("psi.fs.r_", out_meta$regions) & # the species has data in the region of interest 
@@ -149,7 +149,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
         
         if(abs(diff) <= tolerance){
           # The number of sims is very close to the target, so no need to sample
-          print(paste0("no sampling required: n.sims = ", out_dat$BUGSoutput$n.sims))
+          print(paste("no sampling required: n.sims =", out_dat$BUGSoutput$n.sims))
           
         } else
           
@@ -197,8 +197,18 @@ tempSampPost <- function(indata = "../data/model_runs/",
       } 
       
       out2 <- data.frame(species, nRec, first, last, gap, firstMod, lastMod)
+      
+      print(paste("Sampled:", species))
+      
       return(list(out1, out2))
-    } else return(NULL)
+      
+    } else {
+      
+      print(paste("Dropped:", species))
+      
+      return(NULL)
+      
+    }
   }
   
   if(parallel) outputs <- parallel::mclapply(keep, mc.cores = n.cores,
