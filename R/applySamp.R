@@ -39,25 +39,33 @@ applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
     modFiles <- modFiles[grepl(paste0(filetype, "$"), modFiles)] # dollar sign ensures the filetype suffix is at end of name
     
     # retain the species names
-    keep <- gsub(pattern = paste0("\\.", filetype), repl = "", modFiles)
+    keep_iter <- gsub(pattern = paste0("\\.", filetype), repl = "", modFiles)
   }
+  
+  # first species
+  first_spp <- keep_iter[[1]]
   
   # test if first species is chained (i.e., JASMIN models)
   if (substr(first_spp, (nchar(first_spp) + 1) - 2, nchar(first_spp)) %in% c("_1", "_2", "_3")) {
     
-    chained <- TRUE
-    
-    keep <- gsub("(.*)_\\w+", "\\1", keep) # remove all after last underscore (e.g., chain "_1")
+    keep <- gsub("(.*)_\\w+", "\\1", keep_iter) # remove all after last underscore (e.g., chain "_1")
     keep <- gsub("(.*)_\\w+", "\\1", keep) # remove all after last underscore (e.g., iteration "_2000")
     
     keep <- unique(keep) # unique species names
     
-  } else chained <- FALSE
+  } else {
+    
+    # species names don't have associated iteration numbers
+    keep <- keep_iter
+    
+    keep_iter <- NULL
+    
+  }
   
   if(sample == TRUE)
     out <- tempSampPost(indata = paste0(roster$modPath, roster$group, "/occmod_outputs/", roster$ver, "/"),
                         keep = keep,
-                        chained = chained,
+                        keep_iter = keep_iter,
                         output_path = NULL,
                         REGION_IN_Q = paste0("psi.fs.r_", roster$region),
                         sample_n = roster$nSamps,

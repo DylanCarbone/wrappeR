@@ -57,8 +57,6 @@ applyFilters <- function(roster, parallel = TRUE) {
   # test if first species is chained (i.e., JASMIN models)
   if (substr(first_spp, (nchar(first_spp) + 1) - 2, nchar(first_spp)) %in% c("_1", "_2", "_3")) {
     
-    chained <- TRUE
-    
     keep <- gsub("(.*)_\\w+", "\\1", keep_iter) # remove all after last underscore (e.g., chain "_1")
     keep <- gsub("(.*)_\\w+", "\\1", keep) # remove all after last underscore (e.g., iteration "_2000")
     
@@ -66,25 +64,16 @@ applyFilters <- function(roster, parallel = TRUE) {
     
   } else {
     
-    chained <- FALSE
-    
     # species names don't have associated iteration numbers
     keep <- keep_iter
     
+    keep_iter <- NULL
+    
   }
-  
-  ## select which species to drop based on scheme advice etc. These are removed by stackFilter
-  
-  drop <- which(!is.na(speciesInfo$Reason_not_included) & speciesInfo$Reason_not_included != "Didn't meet criteria")
-  
-  drop <- c(as.character(speciesInfo$Species[drop]), 
-            as.character(speciesInfo$concept[drop]))
 
   out <- tempSampPost(indata = paste0(roster$modPath, roster$group, "/occmod_outputs/", roster$ver, "/"),
                       keep = keep,
-                      keep_iter = ifelse(chained == TRUE,
-                                         keep_iter, 
-                                         NULL),
+                      keep_iter = keep_iter,
                       output_path = NULL,
                       REGION_IN_Q = paste0("psi.fs.r_", roster$region),
                       sample_n = roster$nSamps,
@@ -112,6 +101,13 @@ applyFilters <- function(roster, parallel = TRUE) {
     meta[,4] <- max(meta[,4])
   }
 
+  ## select which species to drop based on scheme advice etc. These are removed by stackFilter
+  
+  drop <- which(!is.na(speciesInfo$Reason_not_included) & speciesInfo$Reason_not_included != "Didn't meet criteria")
+  
+  drop <- c(as.character(speciesInfo$Species[drop]), 
+            as.character(speciesInfo$concept[drop]))
+  
   stacked_samps <- tempStackFilter(input = "memory",
                                    dat = samp_post,
                                    indata = NULL,
