@@ -76,7 +76,6 @@ tempSampPost <- function(indata = "../data/model_runs/",
     if(!is.null(keep_iter)) {
       
       # chained models
-      
       out_dat <- load_rdata(paste0(indata, species, "_20000_1.rdata")) # where the first part of the model is stored for JASMIN models
       out_meta <- load_rdata(paste0(indata, species, "_", min_iter, "_1.rdata")) # where metadata is stored for JASMIN models
 
@@ -84,15 +83,17 @@ tempSampPost <- function(indata = "../data/model_runs/",
       
         # non-chained models
         
-        if(filetype == "rds")
+        if(filetype == "rds") {
       
           out_dat <- readRDS(paste0(indata, species, ".rds"))
           out_meta <- out_dat
+        }
     
-        else if(filetype == "rdata")
+        else if(filetype == "rdata") {
           
           out_dat <- load_rdata(paste0(indata, species, ".rdata"))
           out_meta <- out_dat
+        }
       
     }
     
@@ -104,12 +105,9 @@ tempSampPost <- function(indata = "../data/model_runs/",
        !is.null(out_dat$model) # there is a model object to read from
        ) { # three conditions are met
       
-      raw_occ <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
-  
-      colnames(raw_occ) <- paste("year_", out_dat$min_year:out_dat$max_year, sep = "")
-
       if(!is.null(keep_iter)) {
         
+        # chained models
         out_dat <- load_rdata(paste0(indata, species, "_20000_1.rdata")) # where occupancy data is stored for JASMIN models 
         raw_occ1 <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
         out_dat <- load_rdata(paste0(indata, species, "_20000_2.rdata")) # where occupancy data is stored for JASMIN models 
@@ -123,14 +121,25 @@ tempSampPost <- function(indata = "../data/model_runs/",
         
       } else {
         
+        # non-chained models
         raw_occ <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
-        
+      
       }
       
       # check whether the number of sims is enough to sample 
       # first calculate the difference between n.sims and sample_n.
       # positive numbers indicate we have more than we need
-      diff <- out_dat$BUGSoutput$n.sims - sample_n
+      if(!is.null(keep_iter)) {
+        
+        # chained models- sims from three chains
+        diff <- (out_dat$BUGSoutput$n.sims * 3) - sample_n
+        
+      } else {
+        
+        diff <- out_dat$BUGSoutput$n.sims - sample_n
+
+      }
+      
       if(diff > tolerance){
         
         # we have more sims in the model than we want, so we need to sample them
@@ -141,7 +150,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
         if(abs(diff) <= tolerance){
           # The number of sims is very close to the target, so no need to sample
           print(paste0("no sampling required: n.sims = ", out_dat$BUGSoutput$n.sims))
-        
+          
         } else
           
           stop("Error: Not enough iterations stored. Choose a smaller value of sample_n")
