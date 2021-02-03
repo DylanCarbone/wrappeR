@@ -52,6 +52,10 @@
 #'              
 #' @param outPath A character string or vector of strings. Location to store 
 #'                the outputs if write = TRUE. 
+#'                
+#' @param speciesToKeep A character vector of strings. the names of species to
+#' include, this is used in combination with 'indicator'. ONLY species on both
+#' lists will be included on the output.
 #'  	  
 #' @param clipBy A character string or vector of strings. One of "species" or 
 #'               "group" indicating whether to clip outputs by the first and 
@@ -77,6 +81,7 @@ createRoster <- function(index,
                          scaleObs = "global",
                          write,
                          outPath,
+                         speciesToKeep = NA,
                          clipBy = "group",
                          t0,
                          tn) {
@@ -123,9 +128,13 @@ createRoster <- function(index,
                    scaleObs = scaleObs,
                    write = write, 
                    outPath = outPath,
+                   speciesToKeep = ifelse(test = is.na(speciesToKeep), 
+                                          yes = NA, 
+                                          no = as.character(paste(speciesToKeep, collapse = ','))),
                    clipBy = clipBy,
                    t0 = t0,
-                   tn = tn)
+                   tn = tn,
+                   stringsAsFactors = FALSE)
   
   roster <- split(df, seq(nrow(df)))
   

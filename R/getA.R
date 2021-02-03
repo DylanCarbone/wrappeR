@@ -1,4 +1,4 @@
-#' \code{applyFilters} - Extracts the "a" parameter from occupancy model outputs.
+#' \code{getA} - Extracts the "a" parameter from occupancy model outputs.
 #' 
 #' @description "a" is the occupancy on the logit scale
 #' Currently this only works for Regions. For the whole domain some recoding and calculation would be required.
