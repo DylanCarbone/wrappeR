@@ -115,7 +115,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
       }
     
     
-    print(paste("load:", species, ", ", scaleObs, "records:", nRec))
+    print(paste0("load: ", species, ", ", scaleObs, " records: ", nRec))
     
     if(nRec >= minObs & # there are enough observations globally (or in region?)
        REGION_IN_Q %in% paste0("psi.fs.r_", out_meta$regions) & # the species has data in the region of interest 

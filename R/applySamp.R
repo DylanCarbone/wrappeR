@@ -38,7 +38,7 @@ applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
     # strip out the files
     modFiles <- modFiles[grepl(paste0(filetype, "$"), modFiles)] # dollar sign ensures the filetype suffix is at end of name
     
-    # retain the species names
+    # retain the species names (with iteration number if applicable)
     keep_iter <- gsub(pattern = paste0("\\.", filetype), repl = "", modFiles)
   }
   
@@ -67,7 +67,7 @@ applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
                         keep = keep,
                         keep_iter = keep_iter,
                         output_path = NULL,
-                        REGION_IN_Q = paste0("psi.fs.r_", roster$region),
+                        region = roster$region,
                         sample_n = roster$nSamps,
                         group_name = roster$group,
                         combined_output = TRUE,
