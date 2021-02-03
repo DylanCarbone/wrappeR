@@ -1,3 +1,4 @@
+#' \code{tempSampPost} - from TrendSummaries, edited
 #' @importFrom parallel mclapply
 #' @importFrom parallel detectCores
 #' @importFrom stats aggregate
