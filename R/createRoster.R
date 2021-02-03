@@ -41,6 +41,12 @@
 #'               Threshold number of observation below which a species is 
 #'               dropped from the sample.
 #'               
+#' @param scaleObs A character string or vector of strings.  
+#'                 At what scale to assess the number of observations? One of
+#'                 "region" to assess the number of observations at the chosen
+#'                 regional scale or "global" to assess the total number of 
+#'                 observations for the species.
+#'               
 #' @param write Logical or logical vector. If TRUE then the outputs are 
 #'              written as a .rdata file to outPath.
 #'              
@@ -66,11 +72,12 @@ createRoster <- function(index,
                          group, 
                          indicator, 
                          region,
-                         nSamps = 1000,
+                         nSamps = 999,
                          minObs = 50,
+                         scaleObs = "global",
                          write,
                          outPath,
-                         clipBy = "species",
+                         clipBy = "group",
                          t0,
                          tn) {
   
@@ -113,6 +120,7 @@ createRoster <- function(index,
                    region = region, 
                    nSamps = as.numeric(nSamps), 
                    minObs = minObs, 
+                   scaleObs = scaleObs,
                    write = write, 
                    outPath = outPath,
                    clipBy = clipBy,

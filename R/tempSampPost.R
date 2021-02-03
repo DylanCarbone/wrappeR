@@ -11,8 +11,8 @@ tempSampPost <- function(indata = "../data/model_runs/",
                          keep, # species to keep
                          keep_iter, # species to keep with iteration numbers
                          output_path = "../data/sampled_posterior_1000/",
-                         REGION_IN_Q = "psi.fs",
-                         sample_n = 1000,
+                         region,
+                         sample_n = 999,
                          tolerance = 3, # number of iterations above or below sample_n to be acceptable
                          group_name = "",
                          combined_output = TRUE,
@@ -20,6 +20,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
                          min_year_model = NULL,
                          write = FALSE,
                          minObs = NULL,
+                         scaleObs = "global", # scale at which to evaluate the number of records
                          t0, 
                          tn,
                          parallel = TRUE,
@@ -27,6 +28,8 @@ tempSampPost <- function(indata = "../data/model_runs/",
                          filetype = "rdata"){
   
   if(parallel & is.null(n.cores)) n.cores <- parallel::detectCores() - 1
+  
+  REGION_IN_Q <- paste0("psi.fs.r_", region)
   
   ### set up species list we want to loop though ###
   
@@ -87,18 +90,32 @@ tempSampPost <- function(indata = "../data/model_runs/",
       
           out_dat <- readRDS(paste0(indata, species, ".rds"))
           out_meta <- out_dat
+          
         }
     
         else if(filetype == "rdata") {
           
           out_dat <- load_rdata(paste0(indata, species, ".rdata"))
           out_meta <- out_dat
+          
         }
       
     }
     
-    nRec <- out_meta$species_observations
-    print(paste("load:", species, "records:", nRec))
+    if(scaleObs == "global") {
+      
+      nRec <- out_meta$species_observations # total number of observations for species
+    
+    } else {
+      
+      dat <- out_meta$model$data
+      
+      nRec <- sum(dat$y * dat[[paste0("r_", region)]][dat$Site]) # number of observations within region
+      
+      }
+    
+    
+    print(paste("load:", species, ", ", scaleObs, "records:", nRec))
     
     if(nRec >= minObs & # there are enough observations globally (or in region?)
        REGION_IN_Q %in% paste0("psi.fs.r_", out_meta$regions) & # the species has data in the region of interest 
