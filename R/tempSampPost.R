@@ -107,20 +107,28 @@ tempSampPost <- function(indata = "../data/model_runs/",
       
       if(scaleObs == "global") # global scale evaluation
       
-      nRec <- out_meta$species_observations # total number of observations for species
+        # HOW COULD WE MAKE THIS TEMPORALLY EXPLICIT?
+        nRec <- out_meta$species_observations # total number of observations for species
       
       else {
+        
+        dat <- out_meta$model$data() # retrieve input data
       
-      dat <- out_meta$model$data() # retrieve input data
-      
-      nRec <- sum(dat$y * dat[[paste0("r_", region)]][dat$Site]) # number of observations within region
+        dat <- data.frame(year = dat$Year, # year
+                          rec = dat$y, # records
+                          region_site = dat[[paste0("r_", region)]][dat$Site]) # sites within selected region
+        
+        # subset to region and temporal window
+        dat <- dat[dat$region_site == 1 & dat$year >= (t0 - (out_meta$min_year - 1)) & dat$year <= (tn - (out_meta$min_year - 1)), ]
+        
+        nRec <- sum(dat$rec) # number of observations within region within time window t0 - tn
       
       }
     } else nrec <- NA # null models get NA observations
     
     print(paste0("load: ", species, ", ", scaleObs, " records: ", nRec))
     
-    if(nRec >= minObs & # there are enough observations globally (or in region?)
+    if(nRec >= minObs & # there are enough observations globally or in region
        REGION_IN_Q %in% paste0("psi.fs.r_", out_meta$regions) & # the species has data in the region of interest 
        !is.null(out_dat$model) # there is a model object to read from
        ) { # three conditions are met

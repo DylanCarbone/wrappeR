@@ -47,7 +47,7 @@ applyFilters <- function(roster, parallel = TRUE) {
     # strip out the files
     modFiles <- modFiles[grepl(paste0(filetype, "$"), modFiles)] # dollar sign ensures the filetype suffix is at end of name
     
-    # retain the species names (with iteration number if applicable)
+    # retain the species names (with iteration number if applicable - chained models)
     keep_iter <- gsub(pattern = paste0("\\.", filetype), repl = "", modFiles)
   }
   
@@ -63,7 +63,7 @@ applyFilters <- function(roster, parallel = TRUE) {
     
   } else {
     
-    # species names don't have associated iteration numbers
+    # species names don't have associated iteration numbers - non-chained models
     keep <- keep_iter
     
     keep_iter <- NULL
@@ -73,7 +73,7 @@ applyFilters <- function(roster, parallel = TRUE) {
   # Subset to speciesToKeep
   if(!is.na(roster$speciesToKeep)){
     
-    # Convert the comma seperated species names to a vector of species
+    # Convert the comma separated species names to a vector of species
     speciesToKeep <- unlist(strsplit(roster$speciesToKeep, ','))
     
     # Species not found
