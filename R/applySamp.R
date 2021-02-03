@@ -2,16 +2,24 @@
 
 #' @param roster list
 #' @param parallel Logical
-#' @param sample Logical. Should the model sample from the posterior distibution or just get the a parameters instead?
+#' @param sample Logical. Should the model sample from the posterior distribution or just get the a parameters instead?
 #' @export
 #' 
 
 applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
   
+  data(speciesInfo)
+  
   if (roster$indicator == "priority") {
     
-    keep <- sampSubset("priority",
-                       inPath = roster$metaPath) 
+    keepInds <- which(!is.na(speciesInfo[, roster$region])) 
+    
+    ## use both latin names and concept codes to screen for priority species 
+    
+    keep <- c(as.character(speciesInfo$Species[keepInds]), 
+              as.character(speciesInfo$concept[keepInds]))
+    
+    keep <- keep[-which(is.na(keep))]
     
   } else if (roster$indicator == "pollinators") {
     
@@ -19,6 +27,7 @@ applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
                        inPath = roster$metaPath)
     
   } else {
+    
     modFilePath <- file.path(roster$modPath, roster$group, "occmod_outputs", roster$ver)
     modFiles <- list.files(modFilePath)
     
@@ -27,28 +36,49 @@ applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
     if(!filetype %in% c("rdata", "rds")) stop("Model files must be either .rds or .rdata")
     
     # strip out the files
-    modFiles <- modFiles[grepl(paste0(filetype,"$"), modFiles)] # dollar sign ensures the filepype suffix is at end of name
+    modFiles <- modFiles[grepl(paste0(filetype, "$"), modFiles)] # dollar sign ensures the filetype suffix is at end of name
     
-    # retain the species names
-    keep <- gsub(pattern = paste0("\\.", filetype), repl = "", modFiles)
+    # retain the species names (with iteration number if applicable)
+    keep_iter <- gsub(pattern = paste0("\\.", filetype), repl = "", modFiles)
   }
   
-  if(sample)
+  # first species
+  first_spp <- keep_iter[[1]]
+  
+  # test if first species is chained (i.e., JASMIN models)
+  if (substr(first_spp, (nchar(first_spp) + 1) - 2, nchar(first_spp)) %in% c("_1", "_2", "_3")) {
+    
+    keep <- gsub("(.*)_\\w+", "\\1", keep_iter) # remove all after last underscore (e.g., chain "_1")
+    keep <- gsub("(.*)_\\w+", "\\1", keep) # remove all after last underscore (e.g., iteration "_2000")
+    
+    keep <- unique(keep) # unique species names
+    
+  } else {
+    
+    # species names don't have associated iteration numbers
+    keep <- keep_iter
+    
+    keep_iter <- NULL
+    
+  }
+  
+  if(sample == TRUE)
     out <- tempSampPost(indata = paste0(roster$modPath, roster$group, "/occmod_outputs/", roster$ver, "/"),
-                      keep = keep,
-                      output_path = NULL,
-                      REGION_IN_Q = paste0("psi.fs.r_", roster$region),
-                      sample_n = roster$nSamps,
-                      group_name = roster$group,
-                      combined_output = TRUE,
-                      #max_year_model = 2018,
-                      #min_year_model = 1970,
-                      write = FALSE,
-                      minObs = roster$minObs,
-                      t0 = roster$t0,
-                      tn = roster$tn,
-                      parallel = parallel,
-                      filetype = filetype)
+                        keep = keep,
+                        keep_iter = keep_iter,
+                        output_path = NULL,
+                        region = roster$region,
+                        sample_n = roster$nSamps,
+                        group_name = roster$group,
+                        combined_output = TRUE,
+                        #max_year_model = 2018,
+                        #min_year_model = 1970,
+                        write = FALSE,
+                        minObs = roster$minObs,
+                        t0 = roster$t0,
+                        tn = roster$tn,
+                        parallel = parallel,
+                        filetype = filetype)
   else
     out <- getA(indata = paste0(roster$modPath, roster$group, "/occmod_outputs/", roster$ver, "/"),
                         keep = keep,

@@ -47,8 +47,27 @@ applyFilters <- function(roster, parallel = TRUE) {
     # strip out the files
     modFiles <- modFiles[grepl(paste0(filetype, "$"), modFiles)] # dollar sign ensures the filetype suffix is at end of name
     
-    # retain the species names
-    keep <- gsub(pattern = paste0("\\.", filetype), repl = "", modFiles)
+    # retain the species names (with iteration number if applicable)
+    keep_iter <- gsub(pattern = paste0("\\.", filetype), repl = "", modFiles)
+  }
+  
+  first_spp <- keep_iter[[1]]
+  
+  # test if first species is chained (i.e., JASMIN models)
+  if (substr(first_spp, (nchar(first_spp) + 1) - 2, nchar(first_spp)) %in% c("_1", "_2", "_3")) {
+    
+    keep <- gsub("(.*)_\\w+", "\\1", keep_iter) # remove all after last underscore (e.g., chain "_1")
+    keep <- gsub("(.*)_\\w+", "\\1", keep) # remove all after last underscore (e.g., iteration "_2000")
+    
+    keep <- unique(keep) # unique species names
+    
+  } else {
+    
+    # species names don't have associated iteration numbers
+    keep <- keep_iter
+    
+    keep_iter <- NULL
+    
   }
   
   # Subset to speciesToKeep
@@ -69,29 +88,12 @@ applyFilters <- function(roster, parallel = TRUE) {
     keep <- keep[tolower(keep) %in% tolower(speciesToKeep)]
     
   }
-  
-  first_spp <- keep[[1]]
-  
-  if (substr(first_spp, (nchar(first_spp) + 1) - 2, nchar(first_spp)) %in% c("_1", "_2", "_3")) {
-    
-    keep <- gsub("(.*)_\\w+", "\\1", keep) # remove all after last underscore (e.g., chain "_1")
-    keep <- gsub("(.*)_\\w+", "\\1", keep) # remove all after last underscore (e.g., iteration "_2000")
-    
-    keep <- unique(keep) # unique species names
-    
-  }
-  
-  ## select which species to drop based on scheme advice etc. These are removed by stackFilter
-  
-  drop <- which(!is.na(speciesInfo$Reason_not_included) & speciesInfo$Reason_not_included != "Didn't meet criteria")
-  
-  drop <- c(as.character(speciesInfo$Species[drop]), 
-            as.character(speciesInfo$concept[drop]))
 
   out <- tempSampPost(indata = paste0(roster$modPath, roster$group, "/occmod_outputs/", roster$ver, "/"),
                       keep = keep,
+                      keep_iter = keep_iter,
                       output_path = NULL,
-                      REGION_IN_Q = paste0("psi.fs.r_", roster$region),
+                      region = roster$region,
                       sample_n = roster$nSamps,
                       group_name = roster$group,
                       combined_output = TRUE,
@@ -99,6 +101,7 @@ applyFilters <- function(roster, parallel = TRUE) {
                       #min_year_model = 1970,
                       write = FALSE,
                       minObs = roster$minObs,
+                      scaleObs = roster$scaleObs,
                       t0 = roster$t0,
                       tn = roster$tn,
                       parallel = parallel,
@@ -117,6 +120,13 @@ applyFilters <- function(roster, parallel = TRUE) {
     meta[,4] <- max(meta[,4])
   }
 
+  ## select which species to drop based on scheme advice etc. These are removed by stackFilter
+  
+  drop <- which(!is.na(speciesInfo$Reason_not_included) & speciesInfo$Reason_not_included != "Didn't meet criteria")
+  
+  drop <- c(as.character(speciesInfo$Species[drop]), 
+            as.character(speciesInfo$concept[drop]))
+  
   stacked_samps <- tempStackFilter(input = "memory",
                                    dat = samp_post,
                                    indata = NULL,

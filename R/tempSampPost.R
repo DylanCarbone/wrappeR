@@ -9,10 +9,11 @@
 #' @export
 
 tempSampPost <- function(indata = "../data/model_runs/", 
-                         keep,
+                         keep, # species to keep
+                         keep_iter, # species to keep with iteration numbers
                          output_path = "../data/sampled_posterior_1000/",
-                         REGION_IN_Q = "psi.fs",
-                         sample_n = 1000,
+                         region,
+                         sample_n = 999,
                          tolerance = 3, # number of iterations above or below sample_n to be acceptable
                          group_name = "",
                          combined_output = TRUE,
@@ -20,6 +21,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
                          min_year_model = NULL,
                          write = FALSE,
                          minObs = NULL,
+                         scaleObs = "global", # scale at which to evaluate the number of records
                          t0, 
                          tn,
                          parallel = TRUE,
@@ -28,16 +30,12 @@ tempSampPost <- function(indata = "../data/model_runs/",
   
   if(parallel & is.null(n.cores)) n.cores <- parallel::detectCores() - 1
   
+  REGION_IN_Q <- paste0("psi.fs.r_", region)
+  
   ### set up species list we want to loop though ###
   
-  spp.list <- list.files(indata, 
-                         pattern = paste0(filetype,"$")) # species for which we have models
-  spp.list <- gsub(pattern = paste0(".", filetype), "", spp.list)
-  
-  # to identify if the models are JASMIN based
-  first.spp <- spp.list[[1]]
-  
-  if(substr(first.spp, (nchar(first.spp) + 1) - 2, nchar(first.spp)) %in% c("_1", "_2", "_3")) {
+  # extract minimum iteration number for chained models
+  if(!is.null(keep_iter)) {
     
     # function to find minimum iteration for JASMIN models - Tom August
     findMinIteration <- function(list_of_file_names){
@@ -48,7 +46,6 @@ tempSampPost <- function(indata = "../data/model_runs/",
       # remove the last number and file extension
       # find '_' followed by a signal number and a '.' and remove
       # that and everything that follows
-      # remove '\\..+' if there is no file extension
       list_of_file_names <- gsub('_[[:digit:]]{1}$', '', list_of_file_names)
       
       # Extract the iterations number
@@ -59,16 +56,9 @@ tempSampPost <- function(indata = "../data/model_runs/",
       
     }
     
-    min_iter <- findMinIteration(spp.list)
-    
-    spp.list <- gsub("(.*)_\\w+", "\\1", spp.list) # remove all after last underscore (e.g., "_1")
-    spp.list <- gsub("(.*)_\\w+", "\\1", spp.list) # remove all after last underscore (e.g., "_2000")
-    
-    spp.list <- unique(spp.list) # unique species names
+    min_iter <- findMinIteration(keep_iter)
     
   }
-  
-  spp.list <- spp.list[tolower(spp.list) %in% tolower(keep)]
   
   samp_post <- NULL # create the stacked variable, will be used if combined_output is TRUE.
   
@@ -83,42 +73,61 @@ tempSampPost <- function(indata = "../data/model_runs/",
   
   combineSamps <- function(species, minObs) { 
     # NJBI this function refers to several global variables, e.g. tn - not good practice
-    #print(species)
+    
     out <- NULL
     raw_occ <- NULL
     
-    if(substr(first.spp, (nchar(first.spp) + 1) - 2, nchar(first.spp)) %in% c("_1", "_2", "_3")) {
+    if(!is.null(keep_iter)) {
       
+      # chained models
       out_dat <- load_rdata(paste0(indata, species, "_20000_1.rdata")) # where the first part of the model is stored for JASMIN models
       out_meta <- load_rdata(paste0(indata, species, "_", min_iter, "_1.rdata")) # where metadata is stored for JASMIN models
 
       } else {
       
-      if(filetype == "rds")
+        # non-chained models
         
-        out_dat <- readRDS(paste0(indata, species, ".rds"))
+        if(filetype == "rds") {
       
-      else if(filetype == "rdata")
-        
-        out_dat <- load_rdata(paste0(indata, species, ".rdata"))
-        out_meta <- out_dat
-      
-    }
+          out_dat <- readRDS(paste0(indata, species, ".rds"))
+          out_meta <- out_dat
+          
+        }
     
-    nRec <- out_meta$species_observations
-    print(paste(species, nRec))
+        else if(filetype == "rdata") {
+          
+          out_dat <- load_rdata(paste0(indata, species, ".rdata"))
+          out_meta <- out_dat
+          
+        }
+      
+      }
+    
+    if(!is.null(out_dat$model)) { # there is a model object to read from
+      
+      if(scaleObs == "global") # global scale evaluation
+      
+      nRec <- out_meta$species_observations # total number of observations for species
+      
+      else {
+      
+      dat <- out_meta$model$data() # retrieve input data
+      
+      nRec <- sum(dat$y * dat[[paste0("r_", region)]][dat$Site]) # number of observations within region
+      
+      }
+    } else nrec <- NA # null models get NA observations
+    
+    print(paste0("load: ", species, ", ", scaleObs, " records: ", nRec))
     
     if(nRec >= minObs & # there are enough observations globally (or in region?)
-       REGION_IN_Q %in% paste0("psi.fs.r_", out_dat$regions) & # the species has data in the region of interest 
+       REGION_IN_Q %in% paste0("psi.fs.r_", out_meta$regions) & # the species has data in the region of interest 
        !is.null(out_dat$model) # there is a model object to read from
        ) { # three conditions are met
       
-      raw_occ <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
-  
-      colnames(raw_occ) <- paste("year_", out_dat$min_year:out_dat$max_year, sep = "")
-
-      if(substr(first.spp, (nchar(first.spp) + 1) - 2, nchar(first.spp)) %in% c("_1", "_2", "_3")) {
+      if(!is.null(keep_iter)) {
         
+        # chained models
         out_dat <- load_rdata(paste0(indata, species, "_20000_1.rdata")) # where occupancy data is stored for JASMIN models 
         raw_occ1 <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
         out_dat <- load_rdata(paste0(indata, species, "_20000_2.rdata")) # where occupancy data is stored for JASMIN models 
@@ -132,22 +141,38 @@ tempSampPost <- function(indata = "../data/model_runs/",
         
       } else {
         
+        # non-chained models
         raw_occ <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
-        
+      
       }
       
       # check whether the number of sims is enough to sample 
       # first calculate the difference between n.sims and sample_n.
       # positive numbers indicate we have more than we need
-      diff <- out_dat$BUGSoutput$n.sims - sample_n
+      if(!is.null(keep_iter)) {
+        
+        # chained models- sims from three chains
+        diff <- (out_dat$BUGSoutput$n.sims * 3) - sample_n
+        
+      } else {
+        
+        diff <- out_dat$BUGSoutput$n.sims - sample_n
+
+      }
+      
       if(diff > tolerance){
+        
         # we have more sims in the model than we want, so we need to sample them
-        raw_occ <- raw_occ[sample(1:nrow(raw_occ), sample_n),]
+        raw_occ <- raw_occ[sample(1:nrow(raw_occ), sample_n), ]
+        
       } else 
+        
         if(abs(diff) <= tolerance){
           # The number of sims is very close to the target, so no need to sample
-          print(paste0("no sampling required: n.sims = ", out_dat$BUGSoutput$n.sims))
+          print(paste("no sampling required: n.sims =", out_dat$BUGSoutput$n.sims))
+          
         } else
+          
           stop("Error: Not enough iterations stored. Choose a smaller value of sample_n")
       
       colnames(raw_occ) <- paste("year_", out_meta$min_year:out_meta$max_year, sep = "")
@@ -192,13 +217,23 @@ tempSampPost <- function(indata = "../data/model_runs/",
       } 
       
       out2 <- data.frame(species, nRec, first, last, gap, firstMod, lastMod)
+      
+      print(paste("Sampled:", species))
+      
       return(list(out1, out2))
-    } else return(NULL)
+      
+    } else {
+      
+      print(paste("Dropped:", species))
+      
+      return(NULL)
+      
+    }
   }
   
-  if(parallel) outputs <- parallel::mclapply(spp.list, mc.cores = n.cores,
+  if(parallel) outputs <- parallel::mclapply(keep, mc.cores = n.cores,
                                              combineSamps, minObs = minObs)
-  else outputs <- lapply(spp.list, 
+  else outputs <- lapply(keep, 
                          combineSamps, minObs = minObs)
   
   
