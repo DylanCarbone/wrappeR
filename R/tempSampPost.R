@@ -100,20 +100,22 @@ tempSampPost <- function(indata = "../data/model_runs/",
           
         }
       
-    }
+      }
     
-    if(scaleObs == "global") {
+    if(!is.null(out_dat$model)) { # there is a model object to read from
+      
+      if(scaleObs == "global") # global scale evaluation
       
       nRec <- out_meta$species_observations # total number of observations for species
-    
-    } else {
       
-      dat <- out_meta$model$data
+      else {
+      
+      dat <- out_meta$model$data() # retrieve input data
       
       nRec <- sum(dat$y * dat[[paste0("r_", region)]][dat$Site]) # number of observations within region
       
       }
-    
+    } else nrec <- NA # null models get NA observations
     
     print(paste0("load: ", species, ", ", scaleObs, " records: ", nRec))
     
