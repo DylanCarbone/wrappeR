@@ -1,9 +1,9 @@
 Package: wrappeR
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.6
-Date: 2021-01-26
-Author: Rob Boyd
+Title: A Pipeline for Biodiversity Indicators
+Version: 0.2.0
+Date: 2021-02-03
+Author: Rob Boyd, Rob Cooke
 Maintainer: Rob Boyd <robboy@ceh.ac.uk>
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
