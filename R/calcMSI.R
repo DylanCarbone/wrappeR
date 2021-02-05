@@ -109,6 +109,9 @@ calcMSI <- function(dat,
     inDat <- data.frame(means, 
                         se = se)
     
+    # prevent Error in node tau.obs when se = 0
+    inDat$se[inDat$se == 0] <- 0.0001
+    
     inDat$year <- as.numeric(gsub("year_", "", inDat$year))
     
     ind <- BRCindicators::bma(data = inDat,
