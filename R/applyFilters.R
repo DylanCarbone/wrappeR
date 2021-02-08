@@ -38,14 +38,26 @@ applyFilters <- function(roster, parallel = TRUE) {
   } else {
     
     modFilePath <- file.path(roster$modPath, roster$group, "occmod_outputs", roster$ver)
-    modFiles <- list.files(modFilePath)
     
-    # read the suffix of the first model files
-    filetype <- strsplit(modFiles[1], "\\.")[[1]][2] 
-    if(!filetype %in% c("rdata", "rds")) stop("Model files must be either .rds or .rdata")
+    # try .rdata
+    modFiles_rdata <- list.files(modFilePath, pattern = ".rdata")
     
-    # strip out the files
-    modFiles <- modFiles[grepl(paste0(filetype, "$"), modFiles)] # dollar sign ensures the filetype suffix is at end of name
+    # try .rds
+    modFiles_rds <- list.files(modFilePath, pattern = ".rds")
+    
+    if (length(modFiles_rdata) == 0 & length(modFiles_rds) == 0) 
+      stop("Model files must be either .rds or .rdata")
+    
+    else {
+      
+      if(length(modFiles_rdata) == 0) {
+        filetype <- "rds"
+        modFiles <- modFiles_rds}
+      else {
+        filetype <- "rdata"
+        modFiles <- modFiles_rdata}
+      
+    }
     
     # retain the species names (with iteration number if applicable - chained models)
     keep_iter <- gsub(pattern = paste0("\\.", filetype), repl = "", modFiles)
