@@ -177,14 +177,14 @@ tempSampPost <- function(indata = "../data/model_runs/",
 
         }
       
-        if(diff > tolerance){
+        if(diff > tolerance) {
         
           # we have more sims in the model than we want, so we need to sample them
           raw_occ <- raw_occ[sample(1:nrow(raw_occ), sample_n), ]
         
         } else 
         
-          if(abs(diff) <= tolerance){
+          if(abs(diff) <= tolerance) {
             # The number of sims is very close to the target, so no need to sample
             print(paste("no sampling required: n.sims =", out_dat$BUGSoutput$n.sims))
           
@@ -240,12 +240,22 @@ tempSampPost <- function(indata = "../data/model_runs/",
       
       } else {
       
-        print(paste("Dropped:", species))
+        print(paste("Error loading model:", species)) # this can happen for JASMIN models if one of the models in the chain doesn't load properly
       
         return(NULL)
       
       }
-    }
+      
+    } else {
+      
+      # informative messages
+      if(!nRec >= minObs) 
+        print(paste("Dropped (lack of observations):", species)) 
+      else if(!REGION_IN_Q %in% paste0("psi.fs.r_", out_meta$regions))
+        print(paste("Dropped (no regional occupancy estimate):", species))
+      else print(paste("Error loading model:", species))
+      
+      return(NULL)
   }
   
   if(parallel) outputs <- parallel::mclapply(keep, mc.cores = n.cores,
