@@ -14,7 +14,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
                          output_path = "../data/sampled_posterior_1000/",
                          region,
                          sample_n = 999,
-                         tolerance = 3, # number of iterations above or below sample_n to be acceptable
+                         tolerance = 0, # number of iterations above or below sample_n to be acceptable
                          group_name = "",
                          combined_output = TRUE,
                          max_year_model = NULL, 
