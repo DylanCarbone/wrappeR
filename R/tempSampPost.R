@@ -256,6 +256,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
       else print(paste("Error loading model:", species))
       
       return(NULL)
+    }
   }
   
   if(parallel) outputs <- parallel::mclapply(keep, mc.cores = n.cores,
