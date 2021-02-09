@@ -84,8 +84,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
       
       # chained models
       try(out_dat <- load_rdata(paste0(indata, species, "_20000_1.rdata")))  # where the first part of the model is stored for JASMIN models
-      if(!is.null(out_dat$model)) # if model exists
-        out_meta <- load_rdata(paste0(indata, species, "_", min_iter, "_1.rdata")) # where metadata is stored for JASMIN models
+      try(out_meta <- load_rdata(paste0(indata, species, "_", min_iter, "_1.rdata"))) # where metadata is stored for JASMIN models
 
       } else {
       
@@ -107,7 +106,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
       
       }
     
-    if(!is.null(out_dat$model)) { # there is a model object to read from
+    if(!is.null(out_dat$model) & !is.null(out_meta)) { # there is a model object to read from with metadata
       
       if(scaleObs == "global") # global scale evaluation
       
