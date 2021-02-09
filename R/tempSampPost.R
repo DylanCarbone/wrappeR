@@ -248,7 +248,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
     } else {
       
       # informative messages
-      if(!nRec >= minObs) 
+      if(!is.na(nRec) & !nRec >= minObs) 
         print(paste("Dropped (lack of observations):", species)) 
       else if(!REGION_IN_Q %in% paste0("psi.fs.r_", out_meta$regions))
         print(paste("Dropped (no regional occupancy estimate):", species))
