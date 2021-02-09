@@ -29,20 +29,31 @@ applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
   } else {
     
     modFilePath <- file.path(roster$modPath, roster$group, "occmod_outputs", roster$ver)
-    modFiles <- list.files(modFilePath)
     
-    # read the suffix of the first model files
-    filetype <- strsplit(modFiles[1], "\\.")[[1]][2] 
-    if(!filetype %in% c("rdata", "rds")) stop("Model files must be either .rds or .rdata")
+    # try .rdata
+    modFiles_rdata <- list.files(modFilePath, pattern = ".rdata")
     
-    # strip out the files
-    modFiles <- modFiles[grepl(paste0(filetype, "$"), modFiles)] # dollar sign ensures the filetype suffix is at end of name
+    # try .rds
+    modFiles_rds <- list.files(modFilePath, pattern = ".rds")
     
-    # retain the species names (with iteration number if applicable)
+    if (length(modFiles_rdata) == 0 & length(modFiles_rds) == 0) 
+      stop("Model files must be either .rds or .rdata")
+    
+    else {
+      
+      if(length(modFiles_rdata) == 0) {
+        filetype <- "rds"
+        modFiles <- modFiles_rds}
+      else {
+        filetype <- "rdata"
+        modFiles <- modFiles_rdata}
+      
+    }
+    
+    # retain the species names (with iteration number if applicable - chained models)
     keep_iter <- gsub(pattern = paste0("\\.", filetype), repl = "", modFiles)
   }
   
-  # first species
   first_spp <- keep_iter[[1]]
   
   # test if first species is chained (i.e., JASMIN models)
@@ -55,10 +66,29 @@ applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
     
   } else {
     
-    # species names don't have associated iteration numbers
+    # species names don't have associated iteration numbers - non-chained models
     keep <- keep_iter
     
     keep_iter <- NULL
+    
+  }
+  
+  # Subset to speciesToKeep
+  if(!is.na(roster$speciesToKeep)){
+    
+    # Convert the comma separated species names to a vector of species
+    speciesToKeep <- unlist(strsplit(roster$speciesToKeep, ','))
+    
+    # Species not found
+    notFound <- speciesToKeep[!tolower(speciesToKeep) %in% tolower(keep)]
+    
+    if(length(notFound) > 0){
+      warning(paste('some species on your "speciesToKeep" list were not found in the data:',
+                    paste(notFound, collapse = ', ')))
+    }
+    
+    # Subset keep
+    keep <- keep[tolower(keep) %in% tolower(speciesToKeep)]
     
   }
   
