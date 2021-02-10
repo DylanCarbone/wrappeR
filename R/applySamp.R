@@ -102,7 +102,7 @@ applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
               as.character(speciesInfo$concept[drop]))
     
     # only keep species as advised
-    keep <- keep[keep != drop]
+    keep <- keep[!keep %in% drop]
   }
   
   if(sample == TRUE)

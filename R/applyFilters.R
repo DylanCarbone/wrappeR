@@ -111,7 +111,7 @@ applyFilters <- function(roster, parallel = TRUE) {
               as.character(speciesInfo$concept[drop]))
     
     # only keep species as advised
-    keep <- keep[keep != drop]
+    keep <- keep[!keep %in% drop]
   }
   
   out <- tempSampPost(indata = paste0(roster$modPath, roster$group, "/occmod_outputs/", roster$ver, "/"),
