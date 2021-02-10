@@ -92,6 +92,19 @@ applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
     
   }
   
+  if(roster$drop == TRUE) {
+    
+    ## select which species to drop based on scheme advice etc. These are removed by stackFilter
+    
+    drop <- which(!is.na(speciesInfo$Reason_not_included) & speciesInfo$Reason_not_included != "Didn't meet criteria")
+    
+    drop <- c(as.character(speciesInfo$Species[drop]), 
+              as.character(speciesInfo$concept[drop]))
+    
+    # only keep species as advised
+    keep <- keep[keep != drop]
+  }
+  
   if(sample == TRUE)
     out <- tempSampPost(indata = paste0(roster$modPath, roster$group, "/occmod_outputs/", roster$ver, "/"),
                         keep = keep,
@@ -105,6 +118,7 @@ applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
                         #min_year_model = 1970,
                         write = FALSE,
                         minObs = roster$minObs,
+                        scaleObs = roster$scaleObs,
                         t0 = roster$t0,
                         tn = roster$tn,
                         parallel = parallel,
@@ -128,6 +142,15 @@ applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
   meta <- out[[2]]
   
   meta[ ,1] <- tolower(meta[, 1])
+  
+  if (roster$write == TRUE) {
+    
+    comb <- list(samp_post, meta)
+    
+    save(comb, file = paste0(roster$outPath, roster$group, "_", roster$indicator, 
+                                      "_", roster$region, "_samp.rdata"))
+    
+  }
   
   return(list(samp_post = samp_post, 
               meta = meta,

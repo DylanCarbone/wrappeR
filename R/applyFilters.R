@@ -100,7 +100,20 @@ applyFilters <- function(roster, parallel = TRUE) {
     keep <- keep[tolower(keep) %in% tolower(speciesToKeep)]
     
   }
-
+  
+  if(roster$drop == TRUE) {
+    
+    ## select which species to drop based on scheme advice etc. These are removed by stackFilter
+  
+    drop <- which(!is.na(speciesInfo$Reason_not_included) & speciesInfo$Reason_not_included != "Didn't meet criteria")
+  
+    drop <- c(as.character(speciesInfo$Species[drop]), 
+              as.character(speciesInfo$concept[drop]))
+    
+    # only keep species as advised
+    keep <- keep[keep != drop]
+  }
+  
   out <- tempSampPost(indata = paste0(roster$modPath, roster$group, "/occmod_outputs/", roster$ver, "/"),
                       keep = keep,
                       keep_iter = keep_iter,
@@ -131,13 +144,6 @@ applyFilters <- function(roster, parallel = TRUE) {
     meta[,3] <- min(meta[,3])
     meta[,4] <- max(meta[,4])
   }
-
-  ## select which species to drop based on scheme advice etc. These are removed by stackFilter
-  
-  drop <- which(!is.na(speciesInfo$Reason_not_included) & speciesInfo$Reason_not_included != "Didn't meet criteria")
-  
-  drop <- c(as.character(speciesInfo$Species[drop]), 
-            as.character(speciesInfo$concept[drop]))
   
   stacked_samps <- tempStackFilter(input = "memory",
                                    dat = samp_post,

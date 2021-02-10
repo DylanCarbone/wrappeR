@@ -78,6 +78,8 @@ tempSampPost <- function(indata = "../data/model_runs/",
     out_dat <- NULL
     out_meta <- NULL
     raw_occ <- NULL
+    nRec_glob <- NA
+    nRec_reg <- NA
     nRec <- NA
     
     if(!is.null(keep_iter)) {
@@ -108,12 +110,11 @@ tempSampPost <- function(indata = "../data/model_runs/",
     
     if(!is.null(out_dat$model) & !is.null(out_meta)) { # there is a model object to read from with metadata
       
-      if(scaleObs == "global") # global scale evaluation
+      # global scale evaluation
+      # HOW COULD WE MAKE THIS TEMPORALLY EXPLICIT?
+      nRec_glob <- out_meta$species_observations # total number of observations for species
       
-        # HOW COULD WE MAKE THIS TEMPORALLY EXPLICIT?
-        nRec <- out_meta$species_observations # total number of observations for species
-      
-      else {
+      if(scaleObs != "global") {
         
         dat <- out_meta$model$data() # retrieve input data
       
@@ -124,10 +125,16 @@ tempSampPost <- function(indata = "../data/model_runs/",
         # subset to region and temporal window
         dat <- dat[dat$region_site == 1 & dat$year >= (t0 - (out_meta$min_year - 1)) & dat$year <= (tn - (out_meta$min_year - 1)), ]
         
-        nRec <- sum(dat$rec) # number of observations within region within time window t0 - tn
+        nRec_reg <- sum(dat$rec) # number of observations within region within time window t0 - tn
       
       }
     }
+    
+    # filter species based on global or regional number of observations
+    if(scaleObs == "global") 
+      nRec <- nRec_glob # CAUTION - not temporally explicit
+    else
+      nRec <- nRec_reg # CAUTION - temporally explicit
     
     print(paste0("load: ", species, ", ", scaleObs, " records: ", nRec))
     
@@ -231,7 +238,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
           gap <- 1
         } 
       
-        out2 <- data.frame(species, nRec, first, last, gap, firstMod, lastMod)
+        out2 <- data.frame(species, nRec_glob, nRec_reg, first, last, gap, firstMod, lastMod)
       
         print(paste("Sampled:", species))
       
@@ -279,7 +286,8 @@ tempSampPost <- function(indata = "../data/model_runs/",
   meta <- do.call("rbind", meta)
   
   meta <- data.frame(Species = meta$species,
-                     n_obs = meta$nRec,
+                     n_obs_global = meta$nRec_glob,
+                     n_obs_regional = meta$nRec_reg,
                      min_year_data = meta$first,
                      max_year_data = meta$last,
                      min_year_model = meta$firstMod,
