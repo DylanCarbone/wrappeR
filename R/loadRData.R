@@ -1,4 +1,13 @@
-# function to deal with different file formats
+#' \code{loadRFile} - function to deal with different file formats
+#' 
+#' @description This function checks file format (rds or rdata) and loads it
+#'
+#' @param fileName name of the file to load
+#' 
+#' @return file loaded
+
+
+
 loadRData <- function(fileName){
   #loads an RData file, and returns it
   load(fileName)
