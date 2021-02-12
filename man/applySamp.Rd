@@ -11,7 +11,7 @@ applySamp(roster, parallel = TRUE, sample = TRUE)
 
 \item{parallel}{Logical}
 
-\item{sample}{Logical. Should the model sample from the posterior distibution or just get the a parameters instead?}
+\item{sample}{Logical. Should the model sample from the posterior distribution or just get the a parameters instead?}
 }
 \description{
 \code{applySamp} - Reads a series of occupancy model and summarises the outputs
