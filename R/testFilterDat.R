@@ -12,6 +12,6 @@
 #' 
 #' @examples
 #' data(testFilterDat)
-#' MSI <- calcMSI(testFilterDat)
+#' MSI <- calcMSI(testFilterDat, method = "lambda")
 "testFilterDat"
 
