@@ -14,7 +14,9 @@ data(testFilterDat)
 Used for testing
 }
 \examples{
+\dontrun{
 data(testFilterDat)
-MSI <- calcMSI(testFilterDat)
+MSI <- calcMSI(testFilterDat, method = "lambda")
+}
 }
 \keyword{datasets}
