@@ -14,7 +14,9 @@ data(testRoster)
 Used for testing
 }
 \examples{
+\dontrun{
 data(testRoster)
-filterDat <- rbind.fill(lapply(testRoster, applyFilters))
+filterDat <- bind_rows(lapply(testRoster, applyFilters))
+}
 }
 \keyword{datasets}
