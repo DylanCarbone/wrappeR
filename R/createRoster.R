@@ -41,6 +41,12 @@
 #'               Threshold number of observation below which a species is 
 #'               dropped from the sample.
 #'               
+#' @param scaleObs A character string or vector of strings.  
+#'                 At what scale to assess the number of observations? One of
+#'                 "region" to assess the number of observations at the chosen
+#'                 regional scale or "global" to assess the total number of 
+#'                 observations for the species.
+#'               
 #' @param write Logical or logical vector. If TRUE then the outputs are 
 #'              written as a .rdata file to outPath.
 #'              
@@ -49,7 +55,10 @@
 #'                
 #' @param speciesToKeep A character vector of strings. the names of species to
 #' include, this is used in combination with 'indicator'. ONLY species on both
-#' lists will be included on the output.
+#' lists will be included in the output.
+#' 
+#' @param drop Logical or logical vector. If TRUE then species are dropped
+#'             based on scheme advice complied by Charlie Outhwaite
 #'  	  
 #' @param clipBy A character string or vector of strings. One of "species" or 
 #'               "group" indicating whether to clip outputs by the first and 
@@ -70,12 +79,14 @@ createRoster <- function(index,
                          group, 
                          indicator, 
                          region,
-                         nSamps = 1000,
+                         nSamps = 999,
                          minObs = 50,
+                         scaleObs = "global",
                          write,
                          outPath,
                          speciesToKeep = NA,
-                         clipBy = "species",
+                         drop = TRUE,
+                         clipBy = "group",
                          t0,
                          tn) {
   
@@ -118,14 +129,17 @@ createRoster <- function(index,
                    region = region, 
                    nSamps = as.numeric(nSamps), 
                    minObs = minObs, 
+                   scaleObs = scaleObs,
                    write = write, 
                    outPath = outPath,
                    speciesToKeep = ifelse(test = is.na(speciesToKeep), 
                                           yes = NA, 
-                                          no = paste(speciesToKeep, collapse = ',')),
+                                          no = as.character(paste(speciesToKeep, collapse = ','))),
+                   drop = drop,
                    clipBy = clipBy,
                    t0 = t0,
-                   tn = tn)
+                   tn = tn,
+                   stringsAsFactors = FALSE)
   
   roster <- split(df, seq(nrow(df)))
   

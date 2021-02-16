@@ -93,7 +93,7 @@ calcMSI <- function(dat,
     
     getSumStats <- function(stat) {
       
-      out <- reshape2::melt(out, 
+      out <- reshape2::melt(stat, 
                   id.vars = "species",
                   variable.name = "year",
                   value.name = "index")
@@ -108,6 +108,9 @@ calcMSI <- function(dat,
     
     inDat <- data.frame(means, 
                         se = se)
+    
+    # prevent Error in node tau.obs when se = 0
+    inDat$se[inDat$se == 0] <- 0.0001
     
     inDat$year <- as.numeric(gsub("year_", "", inDat$year))
     

@@ -20,18 +20,18 @@
 applyClipping <- function(data, parallel = TRUE, clipBy = "group") {
   # parallel argument currently not used
   
-    if (clipBy == "group" | data$clipBy != "species") { 
-      # check that this arrangement makes sense
-      # I think it's ok, given only two possibilities. Group overrides......
-      data$meta[,3] <- min(data$meta[,3])
-      data$meta[,4] <- max(data$meta[,4])
+  if (clipBy == "group" | data$clipBy != "species") { 
+    # check that this arrangement makes sense
+    # I think it's ok, given only two possibilities. Group overrides......
+    data$meta[,3] <- min(data$meta[,3])
+    data$meta[,4] <- max(data$meta[,4])
+    
     }
-
   
   stacked_samps <- tempStackFilter(input = "memory",
                                    dat = data$samp_post,
                                    indata = NULL,
-                                   output_path=NULL, 
+                                   output_path = NULL, 
                                    group_name = paste0(data$indicator, data$group), 
                                    metadata = data$meta, 
                                    region = data$region,
@@ -40,15 +40,14 @@ applyClipping <- function(data, parallel = TRUE, clipBy = "group") {
                                    maxEndGap = 0,
                                    maxMiddleGap = 10, 
                                    keepSpecies = NULL, 
-                                   removeSpecies = NULL,
+                                   removeSpecies = drop,
                                    ClipFirst = TRUE, 
                                    ClipLast = TRUE)
   
-  # are we ever going to want to do this within wrappeR?
-  #if (roster$write == TRUE) {
-  #  save(stacked_samps, file = paste0(roster$outPath, roster$group, "_", roster$indicator, 
-  #                                    "_", roster$region, ".rdata"))
-  #}
+  if (roster$write == TRUE) {
+   save(stacked_samps, file = paste0(roster$outPath, roster$group, "_", roster$indicator,
+                                     "_", roster$region, ".rdata"))
+  }
   
   return(stacked_samps)
 }
