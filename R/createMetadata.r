@@ -15,9 +15,7 @@
 #' @export
 
 createMetadata <- function(file_location){
-  library(dplyr)
-  library(pbapply)
-  library(stringr)
+
   metadata <- lapply(list.files(file_location), function(taxa){
     cat('Creating metadata for',taxa,'\n')
     data_types <- c("input_data", "occmod_outputs")
