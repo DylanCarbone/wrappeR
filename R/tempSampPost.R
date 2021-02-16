@@ -14,7 +14,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
                          output_path = "../data/sampled_posterior_1000/",
                          region,
                          sample_n = 999,
-                         tolerance = 3, # number of iterations above or below sample_n to be acceptable
+                         tolerance = 0, # number of iterations above or below sample_n to be acceptable
                          group_name = "",
                          combined_output = TRUE,
                          max_year_model = NULL, 
@@ -74,14 +74,19 @@ tempSampPost <- function(indata = "../data/model_runs/",
   combineSamps <- function(species, minObs) { 
     # NJBI this function refers to several global variables, e.g. tn - not good practice
     
-    out <- NULL
+    # set up defaults
+    out_dat <- NULL
+    out_meta <- NULL
     raw_occ <- NULL
+    nRec_glob <- NA
+    nRec_reg <- NA
+    nRec <- NA
     
     if(!is.null(keep_iter)) {
       
       # chained models
-      out_dat <- load_rdata(paste0(indata, species, "_20000_1.rdata")) # where the first part of the model is stored for JASMIN models
-      out_meta <- load_rdata(paste0(indata, species, "_", min_iter, "_1.rdata")) # where metadata is stored for JASMIN models
+      try(out_dat <- load_rdata(paste0(indata, species, "_20000_1.rdata")))  # where the first part of the model is stored for JASMIN models
+      try(out_meta <- load_rdata(paste0(indata, species, "_", min_iter, "_1.rdata"))) # where metadata is stored for JASMIN models
 
       } else {
       
@@ -89,38 +94,51 @@ tempSampPost <- function(indata = "../data/model_runs/",
         
         if(filetype == "rds") {
       
-          out_dat <- readRDS(paste0(indata, species, ".rds"))
+          try(out_dat <- readRDS(paste0(indata, species, ".rds")))
           out_meta <- out_dat
           
         }
     
         else if(filetype == "rdata") {
           
-          out_dat <- load_rdata(paste0(indata, species, ".rdata"))
+          try(out_dat <- load_rdata(paste0(indata, species, ".rdata")))
           out_meta <- out_dat
           
         }
       
       }
     
-    if(!is.null(out_dat$model)) { # there is a model object to read from
+    if(!is.null(out_dat$model) & !is.null(out_meta)) { # there is a model object to read from with metadata
       
-      if(scaleObs == "global") # global scale evaluation
+      # global scale evaluation
+      # HOW COULD WE MAKE THIS TEMPORALLY EXPLICIT?
+      nRec_glob <- out_meta$species_observations # total number of observations for species
       
-      nRec <- out_meta$species_observations # total number of observations for species
+      if(scaleObs != "global") {
+        
+        dat <- out_meta$model$data() # retrieve input data
       
-      else {
-      
-      dat <- out_meta$model$data() # retrieve input data
-      
-      nRec <- sum(dat$y * dat[[paste0("r_", region)]][dat$Site]) # number of observations within region
+        dat <- data.frame(year = dat$Year, # year
+                          rec = dat$y, # records
+                          region_site = dat[[paste0("r_", region)]][dat$Site]) # sites within selected region
+        
+        # subset to region and temporal window
+        dat <- dat[dat$region_site == 1 & dat$year >= (t0 - (out_meta$min_year - 1)) & dat$year <= (tn - (out_meta$min_year - 1)), ]
+        
+        nRec_reg <- sum(dat$rec) # number of observations within region within time window t0 - tn
       
       }
-    } else nrec <- NA # null models get NA observations
+    }
+    
+    # filter species based on global or regional number of observations
+    if(scaleObs == "global") 
+      nRec <- nRec_glob # CAUTION - not temporally explicit
+    else
+      nRec <- nRec_reg # CAUTION - temporally explicit
     
     print(paste0("load: ", species, ", ", scaleObs, " records: ", nRec))
     
-    if(nRec >= minObs & # there are enough observations globally (or in region?)
+    if(nRec >= minObs & # there are enough observations globally or in region
        REGION_IN_Q %in% paste0("psi.fs.r_", out_meta$regions) & # the species has data in the region of interest 
        !is.null(out_dat$model) # there is a model object to read from
        ) { # three conditions are met
@@ -128,16 +146,19 @@ tempSampPost <- function(indata = "../data/model_runs/",
       if(!is.null(keep_iter)) {
         
         # chained models
-        out_dat <- load_rdata(paste0(indata, species, "_20000_1.rdata")) # where occupancy data is stored for JASMIN models 
-        raw_occ1 <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
-        out_dat <- load_rdata(paste0(indata, species, "_20000_2.rdata")) # where occupancy data is stored for JASMIN models 
-        raw_occ2 <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
-        out_dat <- load_rdata(paste0(indata, species, "_20000_3.rdata")) # where occupancy data is stored for JASMIN models 
-        raw_occ3 <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
+        out_dat1 <- NULL
+        out_dat2 <- NULL
+        out_dat3 <- NULL
         
-        raw_occ <- rbind(raw_occ1, raw_occ2, raw_occ3)
+        try(out_dat1 <- load_rdata(paste0(indata, species, "_20000_1.rdata"))) # where occupancy data is stored for JASMIN models 
+        raw_occ1 <- data.frame(out_dat1$BUGSoutput$sims.list[REGION_IN_Q])
+        try(out_dat2 <- load_rdata(paste0(indata, species, "_20000_2.rdata"))) # where occupancy data is stored for JASMIN models 
+        raw_occ2 <- data.frame(out_dat2$BUGSoutput$sims.list[REGION_IN_Q])
+        try(out_dat3 <- load_rdata(paste0(indata, species, "_20000_3.rdata"))) # where occupancy data is stored for JASMIN models 
+        raw_occ3 <- data.frame(out_dat3$BUGSoutput$sims.list[REGION_IN_Q])
         
-        rm(raw_occ1, raw_occ2, raw_occ3)
+        if(!is.null(out_dat1) & !is.null(out_dat2) & !is.null(out_dat3)) # if all models loaded correctly
+          raw_occ <- rbind(raw_occ1, raw_occ2, raw_occ3)
         
       } else {
         
@@ -146,88 +167,101 @@ tempSampPost <- function(indata = "../data/model_runs/",
       
       }
       
-      # check whether the number of sims is enough to sample 
-      # first calculate the difference between n.sims and sample_n.
-      # positive numbers indicate we have more than we need
-      if(!is.null(keep_iter)) {
+      if(!is.null(raw_occ)) {
         
-        # chained models- sims from three chains
-        diff <- (out_dat$BUGSoutput$n.sims * 3) - sample_n
+        # check whether the number of sims is enough to sample 
+        # first calculate the difference between n.sims and sample_n.
+        # positive numbers indicate we have more than we need
+        if(!is.null(keep_iter)) {
         
-      } else {
+          # chained models - sims from three chains
+          diff <- (out_dat$BUGSoutput$n.sims * 3) - sample_n
         
-        diff <- out_dat$BUGSoutput$n.sims - sample_n
+        } else {
+        
+          diff <- out_dat$BUGSoutput$n.sims - sample_n
 
-      }
-      
-      if(diff > tolerance){
-        
-        # we have more sims in the model than we want, so we need to sample them
-        raw_occ <- raw_occ[sample(1:nrow(raw_occ), sample_n), ]
-        
-      } else 
-        
-        if(abs(diff) <= tolerance){
-          # The number of sims is very close to the target, so no need to sample
-          print(paste("no sampling required: n.sims =", out_dat$BUGSoutput$n.sims))
-          
-        } else
-          
-          stop("Error: Not enough iterations stored. Choose a smaller value of sample_n")
-      
-      colnames(raw_occ) <- paste("year_", out_meta$min_year:out_meta$max_year, sep = "")
-
-      raw_occ$iteration <- 1:sample_n
-      raw_occ$species <- species
-      
-      if(combined_output != TRUE) {
-        write.csv(raw_occ, file = paste(output_path, gsub(".rdata", "" ,i), "_sample_", sample_n, "_post_", REGION_IN_Q, ".csv", sep = ""), row.names = FALSE)
-      } 
-      
-      out1 <- raw_occ
-      
-      dat <- out_meta$model$data()
-      dat <- data.frame(year = dat$Year,
-                        rec = dat$y)
-      
-      first <- min(dat$year[dat$rec == 1]) + (t0 - 1)
-      last <- max(dat$year[dat$rec == 1]) + (t0 - 1)
-      
-      firstMod <- t0
-      
-      lastMod <- tn
-      
-      yrs <- sort(unique(dat$year[dat$rec == 1]), decreasing = FALSE)
-      
-      gaps <- NULL
-      
-      if (length(yrs) > 1) {
-        
-        for (i in (1:length(yrs) - 1)) {
-          gaps <- c(gaps, yrs[i+1] - yrs[i])
         }
-      }
       
-      if (!is.null(gaps)) {
+        if(diff > tolerance) {
         
-        gap <- max(gaps)
+          # we have more sims in the model than we want, so we need to sample them
+          raw_occ <- raw_occ[sample(1:nrow(raw_occ), sample_n), ]
         
+        } else 
+        
+          if(abs(diff) <= tolerance) {
+            # The number of sims is very close to the target, so no need to sample
+            print(paste("no sampling required: n.sims =", out_dat$BUGSoutput$n.sims))
+          
+          } else
+            stop("Error: Not enough iterations stored. Choose a smaller value of sample_n")
+      
+        colnames(raw_occ) <- paste("year_", out_meta$min_year:out_meta$max_year, sep = "")
+
+        raw_occ$iteration <- 1:sample_n
+        raw_occ$species <- species
+      
+        if(combined_output != TRUE) {
+          write.csv(raw_occ, file = paste(output_path, gsub(".rdata", "" ,i), "_sample_", sample_n, "_post_", REGION_IN_Q, ".csv", sep = ""), row.names = FALSE)
+        } 
+      
+        out1 <- raw_occ
+      
+        dat <- out_meta$model$data()
+        dat <- data.frame(year = dat$Year,
+                          rec = dat$y)
+      
+        first <- min(dat$year[dat$rec == 1]) + (t0 - 1)
+        last <- max(dat$year[dat$rec == 1]) + (t0 - 1)
+      
+        firstMod <- t0
+      
+        lastMod <- tn
+      
+        yrs <- sort(unique(dat$year[dat$rec == 1]), decreasing = FALSE)
+      
+        gaps <- NULL
+      
+        if (length(yrs) > 1) {
+        
+          for (i in (1:length(yrs) - 1)) {
+            gaps <- c(gaps, yrs[i+1] - yrs[i])
+          }
+        }
+      
+        if (!is.null(gaps)) {
+        
+          gap <- max(gaps)
+        
+        } else {
+          gap <- 1
+        } 
+      
+        out2 <- data.frame(species, nRec_glob, nRec_reg, first, last, gap, firstMod, lastMod)
+      
+        print(paste("Sampled:", species))
+      
+        return(list(out1, out2))
+      
       } else {
-        gap <- 1
-      } 
       
-      out2 <- data.frame(species, nRec, first, last, gap, firstMod, lastMod)
+        print(paste("Error loading model:", species)) # this can happen for JASMIN models if one of the models in the chain doesn't load properly
       
-      print(paste("Sampled:", species))
+        return(NULL)
       
-      return(list(out1, out2))
+      }
       
     } else {
       
-      print(paste("Dropped:", species))
+      # informative messages
+      if(!is.na(nRec) & !nRec >= minObs) 
+        print(paste("Dropped (lack of observations):", species)) 
+      else if(!is.na(nRec) & !REGION_IN_Q %in% paste0("psi.fs.r_", out_meta$regions))
+        print(paste("Dropped (no regional occupancy estimate):", species))
+      else print(paste("Error loading model:", species))
       
       return(NULL)
-      
     }
   }
   
@@ -252,7 +286,8 @@ tempSampPost <- function(indata = "../data/model_runs/",
   meta <- do.call("rbind", meta)
   
   meta <- data.frame(Species = meta$species,
-                     n_obs = meta$nRec,
+                     n_obs_global = meta$nRec_glob,
+                     n_obs_regional = meta$nRec_reg,
                      min_year_data = meta$first,
                      max_year_data = meta$last,
                      min_year_model = meta$firstMod,
