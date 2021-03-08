@@ -148,7 +148,6 @@ tempSampPost <- function(indata = "../data/model_runs/",
           
         nRec_reg <- sum(dat$rec) # number of observations within region within time window t0 - tn
         
-        }
       }
     }
     
