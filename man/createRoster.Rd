@@ -12,12 +12,13 @@ createRoster(
   group,
   indicator,
   region,
-  nSamps = 1000,
+  nSamps = 999,
   minObs = 50,
+  scaleObs = "global",
   write,
   outPath,
   speciesToKeep = NA,
-  clipBy = "species",
+  clipBy = "group",
   t0,
   tn
 )
@@ -56,6 +57,12 @@ each species' posterior distribution.}
 \item{minObs}{Numeric or numeric vector. 
 Threshold number of observation below which a species is 
 dropped from the sample.}
+
+\item{scaleObs}{A character string or vector of strings.
+At what scale to assess the number of observations? One of
+"region" to assess the number of observations at the chosen
+regional scale or "global" to assess the total number of 
+observations for the species.}
 
 \item{write}{Logical or logical vector. If TRUE then the outputs are 
 written as a .rdata file to outPath.}
