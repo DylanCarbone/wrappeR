@@ -161,9 +161,9 @@ tempSampPost <- function(indata = "../data/model_runs/",
     print(paste0("load: ", species, ", ", scaleObs, " records: ", nRec))
     
     if(nRec >= minObs & # there are enough observations globally or in region
-       REGION_IN_Q %in% paste0("psi.fs.r_", out_meta$regions) & # the species has data in the region of interest 
+       region %in% c(out_meta$regions, names(out_meta$region_aggs)) & # the region or region_agg is listed for the species
        !is.null(out_dat$model) # there is a model object to read from
-       ) { # three conditions are met
+       ) { # the conditions are met
       
       if(!is.null(keep_iter)) {
         
@@ -279,8 +279,8 @@ tempSampPost <- function(indata = "../data/model_runs/",
       # informative messages
       if(!is.na(nRec) & !nRec >= minObs) 
         print(paste("Dropped (lack of observations):", species)) 
-      else if(!is.na(nRec) & !REGION_IN_Q %in% paste0("psi.fs.r_", out_meta$regions))
-        print(paste("Dropped (no regional occupancy estimate):", species))
+      else if(!is.na(nRec) & !region %in% c(out_meta$regions, names(out_meta$region_aggs)))
+        print(paste("Dropped (region or region_aggs not present for species):", species))
       else print(paste("Error loading model:", species))
       
       return(NULL)
