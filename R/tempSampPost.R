@@ -114,34 +114,56 @@ tempSampPost <- function(indata = "../data/model_runs/",
       # HOW COULD WE MAKE THIS TEMPORALLY EXPLICIT?
       nRec_glob <- out_meta$species_observations # total number of observations for species
       
+      # regional scale metadata
       if(scaleObs != "global") {
         
         dat <- out_meta$model$data() # retrieve input data
-      
+        
+        # region vs region_aggs
+        if(region %in% out_meta$regions) {
+          
+          # explicit region - region
+          
+          # sites within selected region
+          region_site <- dat[[paste0("r_", region)]][dat$Site]
+          
+          } else {
+            
+            # aggregate region - region_aggs
+            
+            # this gives you the names of the regions that make up the region_agg
+            region_aggs <- unlist(out_meta$region_aggs[region])
+            
+            # sites within selected aggregate region (i.e., sites across all nested regions)
+            region_site <- rowSums(sapply(region_aggs, function(x) dat[[paste0("r_", x)]][dat$Site]))
+            
+          }
+        
         dat <- data.frame(year = dat$Year, # year
                           rec = dat$y, # records
-                          region_site = dat[[paste0("r_", region)]][dat$Site]) # sites within selected region
-        
+                          region_site = region_site) 
+          
         # subset to region and temporal window
         dat <- dat[dat$region_site == 1 & dat$year >= (t0 - (out_meta$min_year - 1)) & dat$year <= (tn - (out_meta$min_year - 1)), ]
-        
+          
         nRec_reg <- sum(dat$rec) # number of observations within region within time window t0 - tn
-      
+        
       }
     }
     
-    # filter species based on global or regional number of observations
     if(scaleObs == "global") 
+      # global number of observations
       nRec <- nRec_glob # CAUTION - not temporally explicit
     else
+      # regional number of observations
       nRec <- nRec_reg # CAUTION - temporally explicit
     
     print(paste0("load: ", species, ", ", scaleObs, " records: ", nRec))
     
     if(nRec >= minObs & # there are enough observations globally or in region
-       REGION_IN_Q %in% paste0("psi.fs.r_", out_meta$regions) & # the species has data in the region of interest 
+       region %in% c(out_meta$regions, names(out_meta$region_aggs)) & # the region or region_agg is listed for the species
        !is.null(out_dat$model) # there is a model object to read from
-       ) { # three conditions are met
+       ) { # the conditions are met
       
       if(!is.null(keep_iter)) {
         
@@ -257,8 +279,8 @@ tempSampPost <- function(indata = "../data/model_runs/",
       # informative messages
       if(!is.na(nRec) & !nRec >= minObs) 
         print(paste("Dropped (lack of observations):", species)) 
-      else if(!is.na(nRec) & !REGION_IN_Q %in% paste0("psi.fs.r_", out_meta$regions))
-        print(paste("Dropped (no regional occupancy estimate):", species))
+      else if(!is.na(nRec) & !region %in% c(out_meta$regions, names(out_meta$region_aggs)))
+        print(paste("Dropped (region or region_aggs not present for species):", species))
       else print(paste("Error loading model:", species))
       
       return(NULL)
