@@ -105,7 +105,7 @@ createRoster <- function(index,
     tdf <- data.frame(ver = ver, group = group)
     
     # subset metadata to matching taxonomic groups and most recent models
-    mr <- mr[mr$taxa %in% tdf$group & mr$most_recent == TRUE, ]
+    mr <- mr[mr$taxa %in% tdf$group & mr$most_recent == TRUE & mr$data_type == "occmod_outputs", ]
     
     # replace version with most recent model name
     ver <- ifelse(tdf$ver == "most_recent", mr$dataset_name, tdf$ver)
