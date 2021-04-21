@@ -81,6 +81,7 @@ tempSampPost <- function(indata = "../data/model_runs/",
     nRec_glob <- NA
     nRec_reg <- NA
     nRec <- NA
+    rot <- NULL
     
     if(!is.null(keep_iter)) {
       
@@ -260,8 +261,22 @@ tempSampPost <- function(indata = "../data/model_runs/",
           gap <- 1
         } 
       
+        # metadata data frame
         out2 <- data.frame(species, nRec_glob, nRec_reg, first, last, gap, firstMod, lastMod)
-      
+        
+        # add rules of thumb metrics
+        rot <- as.data.frame(attr(out_meta, "metadata")$analysis$spp_Metrics)
+        
+        # if model doesn't have rule of thumb data
+        if(is.null(rot)) rot <- data.frame(median = NA, P90 = NA, visits_median = NA, visits_P90 = NA, prop_list_one = NA, prop_repeats_grp = NA, prop_abs = NA)
+        
+        # EqualWt and HighSpec decision trees (see https://www.biorxiv.org/content/10.1101/813626v1.full)
+        rot$EqualWt <- ifelse(rot$prop_abs >= 0.990, rot$P90 >= 3.1, rot$P90 >= 6.7)
+        rot$HighSpec <- ifelse(rot$prop_abs >= 0.958, rot$P90 >= 9.5, rot$P90 >= 29)
+        
+        # join rules of thumb data
+        out2 <- cbind(out2, rot)
+        
         print(paste("Sampled:", species))
       
         return(list(out1, out2))
