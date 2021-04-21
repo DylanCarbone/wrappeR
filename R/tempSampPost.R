@@ -331,7 +331,16 @@ tempSampPost <- function(indata = "../data/model_runs/",
                      max_year_model = meta$lastMod,
                      gap_start = 0,
                      gap_end = 0,
-                     gap_middle = meta$gap)
+                     gap_middle = meta$gap,
+                     rot_median = meta$median,
+                     rot_P90 = meta$P90,
+                     rot_visits_median = meta$visits_median,
+                     rot_visits_P90 = meta$visits_P90,
+                     rot_prop_list_one = meta$prop_list_one,
+                     rot_prop_repeats_grp = meta$prop_repeats_grp,
+                     rot_prop_abs = meta$prop_abs,
+                     rot_EqualWt = meta$EqualWt,
+                     rot_HighSpec = meta$HighSpec)
   
   colnames(meta) <- paste0(colnames(meta), "_r_", gsub("psi.fs.r_", "", REGION_IN_Q))
   
