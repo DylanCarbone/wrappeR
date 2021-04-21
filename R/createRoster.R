@@ -102,13 +102,15 @@ createRoster <- function(index,
                    stringsAsFactors = FALSE)
     
     # small data frame of ver and group
-    tdf <- data.frame(ver = ver, group = group)
+    tdf <- data.frame(ver_orig = ver, taxa = group)
     
     # subset metadata to matching taxonomic groups and most recent models
-    mr <- mr[mr$taxa %in% tdf$group & mr$most_recent == TRUE & mr$data_type == "occmod_outputs", ]
+    mr <- mr[mr$taxa %in% tdf$taxa & mr$most_recent == TRUE & mr$data_type == "occmod_outputs", ]
+    
+    mr_tdf <- merge(tdf, mr, by = "taxa")
     
     # replace version with most recent model name
-    ver <- ifelse(tdf$ver == "most_recent", mr$dataset_name, tdf$ver)
+    ver <- ifelse(mr_tdf$ver == "most_recent", mr_tdf$dataset_name, mr_tdf$ver)
     
   }
  
