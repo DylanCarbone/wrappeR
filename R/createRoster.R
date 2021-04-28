@@ -1,14 +1,14 @@
 #' \code{createRoster} - Specify how to filter the occupancy model outputs.
 #' 
 #' @description This function can be used to specify the filters that will be applied to 
-#'              the occupancy model outputs using \code{applyFilters}. It works by creating a list
-#'              of 1-row dataframes with all the information needed for \code{applyFilters}. This list 
-#'              is then applied to the applyFilters function later. Arguments should be provided
+#'              the occupancy model outputs using \code{applySamp}. It works by creating a list
+#'              of 1-row dataframes with all the information needed for \code{applySamp}. This list 
+#'              is then applied to the applySamp function later. Arguments should be provided
 #'              as vectors of equal length, with each element in the vectors corresponding to one 
-#'              call to \code{applyFilters}. 
+#'              call to \code{applySamp}. 
 #'              
 #' @param index Numeric. Index of the number of taxonomic groups to 
-#'              \code{applyFilters} across.
+#'              \code{applySamp} across.
 #'
 #' @param modPath A character string or vector of strings. Location(s) of the 
 #'                occupancy model outputs. 
@@ -65,7 +65,7 @@
 #'               last years of data for each species or for the whole group, 
 #'               respectively.
 #' 	  
-#' @return A list of 1-row dataframes containing all arguments needed for \code{applyFilters}. \code{applyFilters}
+#' @return A list of 1-row dataframes containing all arguments needed for \code{applySamp}. \code{applySamp}
 #'         can then be applied to this list to filter models outputs for different taxonomic groups, which may 
 #'         come from different rounds (e.g. Charlie's or later), for different regions, etc. 
 #'         
@@ -102,13 +102,15 @@ createRoster <- function(index,
                    stringsAsFactors = FALSE)
     
     # small data frame of ver and group
-    tdf <- data.frame(ver = ver, group = group)
+    tdf <- data.frame(ver_orig = ver, taxa = group)
     
     # subset metadata to matching taxonomic groups and most recent models
-    mr <- mr[mr$taxa %in% tdf$group & mr$most_recent == TRUE & mr$data_type == "occmod_outputs", ]
+    mr <- mr[mr$taxa %in% tdf$taxa & mr$most_recent == TRUE & mr$data_type == "occmod_outputs", ]
+    
+    mr_tdf <- merge(tdf, mr, by = "taxa")
     
     # replace version with most recent model name
-    ver <- ifelse(tdf$ver == "most_recent", mr$dataset_name, tdf$ver)
+    ver <- ifelse(mr_tdf$ver == "most_recent", mr_tdf$dataset_name, mr_tdf$ver)
     
   }
  
