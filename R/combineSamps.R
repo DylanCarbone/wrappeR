@@ -11,6 +11,7 @@ combineSamps <- function(species, minObs, region, sample_n) {
   nRec_glob <- NA
   nRec_reg <- NA
   nRec <- NA
+  gaps <- NULL
   rot <- NULL
   REGION_IN_Q <- paste0("psi.fs.r_", region)
   
@@ -42,26 +43,30 @@ combineSamps <- function(species, minObs, region, sample_n) {
   
   if(!is.null(out_dat$model) & !is.null(out_meta)) { # there is a model object to read from with metadata
     
-    # global scale evaluation
-    # HOW COULD WE MAKE THIS TEMPORALLY EXPLICIT?
-    nRec_glob <- out_meta$species_observations # total number of observations for species
+    # retrieve input data
+    dat <- out_meta$model$data() 
     
-    # regional scale metadata
-    if(scaleObs != "global") {
+    # non-temporally explicit observation dataframe
+    dat <- data.frame(year = dat$Year, # year
+                      rec = dat$y) # records
+    
+    if(scaleObs == "global") {
       
-      dat <- out_meta$model$data() # retrieve input data
+      # subset to temporal window
+      dat_glob <- dat[dat$year >= (t0 - (out_meta$min_year - 1)) & dat$year <= (tn - (out_meta$min_year - 1)), ]
+      
+      # number of global observations within time window t0 - tn
+      nRec_glob <- sum(dat_glob$rec)
+      
+    } else { # regional scale metadata
       
       # region vs region_aggs
-      if(region %in% out_meta$regions) {
-        
-        # explicit region - region
+      if(region %in% out_meta$regions) { # explicit region - region
         
         # sites within selected region
         region_site <- dat[[paste0("r_", region)]][dat$Site]
         
-      } else {
-        
-        # aggregate region - region_aggs
+      } else { # aggregate region - region_aggs
         
         # this gives you the names of the regions that make up the region_agg
         region_aggs <- unlist(out_meta$region_aggs[region])
@@ -71,24 +76,26 @@ combineSamps <- function(species, minObs, region, sample_n) {
         
       }
       
-      dat <- data.frame(year = dat$Year, # year
-                        rec = dat$y, # records
-                        region_site = region_site) 
+      dat_reg <- data.frame(year = dat$year, # year
+                        rec = dat$rec, # records
+                        region_site = region_site) # sites included within region
       
-      # subset to region and temporal window
-      dat <- dat[dat$region_site == 1 & dat$year >= (t0 - (out_meta$min_year - 1)) & dat$year <= (tn - (out_meta$min_year - 1)), ]
+      # subset to temporal window
+      dat_reg <- dat_reg[dat_reg$region_site == 1 & dat_reg$year >= (t0 - (out_meta$min_year - 1)) & dat_reg$year <= (tn - (out_meta$min_year - 1)), ]
       
-      nRec_reg <- sum(dat$rec) # number of observations within region within time window t0 - tn
+      # number of observations within region within time window t0 - tn
+      nRec_reg <- sum(dat_reg$rec)
       
     }
+    
   }
   
   if(scaleObs == "global") 
     # global number of observations
-    nRec <- nRec_glob # CAUTION - not temporally explicit
+    nRec <- nRec_glob
   else
     # regional number of observations
-    nRec <- nRec_reg # CAUTION - temporally explicit
+    nRec <- nRec_reg
   
   print(paste0("load: ", species, ", ", scaleObs, " records: ", nRec))
   
@@ -162,22 +169,19 @@ combineSamps <- function(species, minObs, region, sample_n) {
       
       out1 <- raw_occ
       
-      # NJBI this is very odd - a previous statement above is almost identical, so this is redundant.
-      # Also, the version above subsets to the region: this one does not. So the metadata is calculated globally, not by region 
-      dat <- out_meta$model$data()
-      dat <- data.frame(year = dat$Year,
-                        rec = dat$y)
+      if(scaleObs == "global") 
+        datm <- dat_glob # temporally explicit global scale metadata
+      else
+        datm <- dat_reg # temporally explicit regional scale metadata
       
-      first <- min(dat$year[dat$rec == 1]) + (t0 - 1)
-      last <- max(dat$year[dat$rec == 1]) + (t0 - 1)
+      first <- min(datm$year[datm$rec == 1]) + (t0 - 1)
+      last <- max(datm$year[datm$rec == 1]) + (t0 - 1)
       
       firstMod <- t0
       
       lastMod <- tn
       
-      yrs <- sort(unique(dat$year[dat$rec == 1]), decreasing = FALSE)
-      
-      gaps <- NULL
+      yrs <- sort(unique(datm$year[datm$rec == 1]), decreasing = FALSE)
       
       if (length(yrs) > 1) {
         
@@ -200,11 +204,8 @@ combineSamps <- function(species, minObs, region, sample_n) {
       # add rules of thumb metrics
       if(!is.null((attr(out_meta, "metadata")$analysis$spp_Metrics)))
         rot <- as.data.frame(attr(out_meta, "metadata")$analysis$spp_Metrics)
-      else 
-        rot <- NULL
-      
-      # if model doesn't have rule of thumb data
-      if(is.null(rot)) rot <- data.frame(median = NA, P90 = NA, visits_median = NA, visits_P90 = NA, prop_list_one = NA, prop_repeats_grp = NA, prop_abs = NA)
+      else # if model doesn't have rule of thumb data
+        rot <- data.frame(median = NA, P90 = NA, visits_median = NA, visits_P90 = NA, prop_list_one = NA, prop_repeats_grp = NA, prop_abs = NA)
       
       # EqualWt and HighSpec decision trees (see https://www.biorxiv.org/content/10.1101/813626v1.full)
       rot$EqualWt <- ifelse(rot$prop_abs >= 0.990, rot$P90 >= 3.1, rot$P90 >= 6.7)
