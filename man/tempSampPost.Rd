@@ -11,7 +11,7 @@ tempSampPost(
   output_path = "../data/sampled_posterior_1000/",
   region,
   sample_n = 999,
-  tolerance = 3,
+  tolerance = 0,
   group_name = "",
   combined_output = TRUE,
   max_year_model = NULL,

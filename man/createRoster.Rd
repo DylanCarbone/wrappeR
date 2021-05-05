@@ -18,6 +18,7 @@ createRoster(
   write,
   outPath,
   speciesToKeep = NA,
+  drop = TRUE,
   clipBy = "group",
   t0,
   tn
@@ -25,7 +26,7 @@ createRoster(
 }
 \arguments{
 \item{index}{Numeric. Index of the number of taxonomic groups to 
-\code{applyFilters} across.}
+\code{applySamp} across.}
 
 \item{modPath}{A character string or vector of strings. Location(s) of the 
 occupancy model outputs.}
@@ -72,7 +73,10 @@ the outputs if write = TRUE.}
 
 \item{speciesToKeep}{A character vector of strings. the names of species to
 include, this is used in combination with 'indicator'. ONLY species on both
-lists will be included on the output.}
+lists will be included in the output.}
+
+\item{drop}{Logical or logical vector. If TRUE then species are dropped
+based on scheme advice complied by Charlie Outhwaite}
 
 \item{clipBy}{A character string or vector of strings. One of "species" or 
 "group" indicating whether to clip outputs by the first and 
@@ -80,15 +84,15 @@ last years of data for each species or for the whole group,
 respectively.}
 }
 \value{
-A list of 1-row dataframes containing all arguments needed for \code{applyFilters}. \code{applyFilters}
+A list of 1-row dataframes containing all arguments needed for \code{applySamp}. \code{applySamp}
         can then be applied to this list to filter models outputs for different taxonomic groups, which may 
         come from different rounds (e.g. Charlie's or later), for different regions, etc.
 }
 \description{
 This function can be used to specify the filters that will be applied to 
-             the occupancy model outputs using \code{applyFilters}. It works by creating a list
-             of 1-row dataframes with all the information needed for \code{applyFilters}. This list 
-             is then applied to the applyFilters function later. Arguments should be provided
+             the occupancy model outputs using \code{applySamp}. It works by creating a list
+             of 1-row dataframes with all the information needed for \code{applySamp}. This list 
+             is then applied to the applySamp function later. Arguments should be provided
              as vectors of equal length, with each element in the vectors corresponding to one 
-             call to \code{applyFilters}.
+             call to \code{applySamp}.
 }
