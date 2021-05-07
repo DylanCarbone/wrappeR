@@ -1,5 +1,5 @@
-
-
+#' \code{combineSamps} - function inside \code{tempSampPost}, see \code{tempSampPost} and \code{applySamp} for details
+#' @export
 
 combineSamps <- function(species, minObs, region, sample_n) { 
   # NJBI this function refers to several global variables, e.g. tn - not good practice
