@@ -1,8 +1,18 @@
 #' \code{combineSamps} - function inside \code{tempSampPost}, see \code{tempSampPost} and \code{applySamp} for details
 #' @export
 
-combineSamps <- function(species, minObs, region, sample_n, keep_iter) { 
-  # NJBI this function refers to several global variables, e.g. tn - not good practice
+combineSamps <- function(species, 
+                         indata, 
+                         keep_iter, 
+                         region, 
+                         sample_n, 
+                         tolerance, 
+                         minObs, 
+                         scaleObs,
+                         t0, 
+                         tn, 
+                         filetype,
+                         min_iter) { 
   
   # set up defaults
   out_dat <- NULL
@@ -14,6 +24,13 @@ combineSamps <- function(species, minObs, region, sample_n, keep_iter) {
   gaps <- NULL
   rot <- NULL
   REGION_IN_Q <- paste0("psi.fs.r_", region)
+  
+  # load_rdata function
+  # loads an RData file, and assigns it to an object name
+  load_rdata <- function(fileName) {
+    load(fileName)
+    get(ls()[ls() != "fileName"])
+  }
   
   if(!is.null(keep_iter)) {
     

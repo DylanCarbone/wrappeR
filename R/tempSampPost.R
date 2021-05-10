@@ -30,9 +30,10 @@ tempSampPost <- function(indata = "../data/model_runs/",
   
   if(parallel & is.null(n.cores)) n.cores <- parallel::detectCores() - 1
   
-  #REGION_IN_Q <- paste0("psi.fs.r_", region)
-  
   ### set up species list we want to loop though ###
+  
+  # default
+  min_iter <- NULL
   
   # extract minimum iteration number for chained models
   if(!is.null(keep_iter)) {
@@ -62,20 +63,12 @@ tempSampPost <- function(indata = "../data/model_runs/",
   
   samp_post <- NULL # create the stacked variable, will be used if combined_output is TRUE.
   
-  # load_rdata function
-  # loads an RData file, and assigns it to an object name
-  load_rdata <- function(fileName) {
-    load(fileName)
-    get(ls()[ls() != "fileName"])
-  }
-  
   # loop through species
-  
-  
+
   if(parallel) outputs <- parallel::mclapply(keep, mc.cores = n.cores,
-                                             combineSamps, minObs = minObs, region = region, sample_n = sample_n, keep_iter = keep_iter)
+                                             combineSamps, indata = indata, keep_iter = keep_iter, region = region, sample_n = sample_n, tolerance = tolerance, minObs = minObs, scaleObs = scaleObs, t0 = t0, tn = tn, filetype = filetype, min_iter = min_iter)
   else outputs <- lapply(keep, 
-                         combineSamps, minObs = minObs, region = region, sample_n = sample_n, keep_iter = keep_iter)
+                         combineSamps, indata = indata, keep_iter = keep_iter, region = region, sample_n = sample_n, tolerance = tolerance, minObs = minObs, scaleObs = scaleObs, t0 = t0, tn = tn, filetype = filetype, min_iter = min_iter)
   
   
   if(parallel) samp_post <- parallel::mclapply(outputs, mc.cores = n.cores,
