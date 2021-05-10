@@ -73,9 +73,9 @@ tempSampPost <- function(indata = "../data/model_runs/",
   
   
   if(parallel) outputs <- parallel::mclapply(keep, mc.cores = n.cores,
-                                             combineSamps, minObs = minObs, region = region, sample_n = sample_n)
+                                             combineSamps, minObs = minObs, region = region, sample_n = sample_n, keep_iter = keep_iter)
   else outputs <- lapply(keep, 
-                         combineSamps, minObs = minObs, region = region, sample_n = sample_n)
+                         combineSamps, minObs = minObs, region = region, sample_n = sample_n, keep_iter = keep_iter)
   
   
   if(parallel) samp_post <- parallel::mclapply(outputs, mc.cores = n.cores,
