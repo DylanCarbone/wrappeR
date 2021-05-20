@@ -35,6 +35,8 @@ calcMSI <- function(dat,
   
   if (method == "lambda") {
     
+    # lambda method
+    
     colnames(dat)[1:(ncol(dat) -2)] <- gsub("year_", "", colnames(dat[1:(ncol(dat) -2)]))
     
     minYr <- as.numeric(colnames(dat)[1])
@@ -62,14 +64,16 @@ calcMSI <- function(dat,
                                           end_year = max(ind$summary$year)) 
     
     st <- BRCindicators::trend_assessment(ind, 
-                                          start_year = (max(ind$summary$year) - 6),  
+                                          start_year = (max(ind$summary$year) - 5),  
                                           end_year = max(ind$summary$year)) 
     
     final <- BRCindicators::trend_assessment(ind, 
-                                          start_year = (max(ind$summary$year) - 1),  
-                                          end_year = max(ind$summary$year)) 
+                                             start_year = max(ind$summary$year),  
+                                             end_year = max(ind$summary$year)) 
     
   } else {
+    
+    # bma method
     
     # fudge factor for occupancy as log of 0 is undefined
     fudgeOcc <- function(x, fudgeFac = 0.0001) {
@@ -135,11 +139,20 @@ calcMSI <- function(dat,
       
     }
     
-    lt <- NULL
+    lt <- BRCindicators::trend_assessment(ind, 
+                                          method = method,
+                                          start_year = min(ind$year),  
+                                          end_year = max(ind$year)) 
     
-    st <- NULL
+    st <- BRCindicators::trend_assessment(ind, 
+                                          method = method,
+                                          start_year = (max(ind$year) - 5),  
+                                          end_year = max(ind$year)) 
     
-    final <- NULL
+    final <- BRCindicators::trend_assessment(ind, 
+                                             method = method,
+                                             start_year = max(ind$year),  
+                                             end_year = max(ind$year)) 
     
   }
 
