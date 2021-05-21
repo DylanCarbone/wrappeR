@@ -66,9 +66,9 @@ tempSampPost <- function(indata = "../data/model_runs/",
   # loop through species
 
   if(parallel) outputs <- parallel::mclapply(keep, mc.cores = n.cores,
-                                             combineSamps, indata = indata, keep_iter = keep_iter, region = region, sample_n = sample_n, tolerance = tolerance, minObs = minObs, scaleObs = scaleObs, t0 = t0, tn = tn, filetype = filetype, min_iter = min_iter)
+                                             combineSamps, indata = indata, keep_iter = keep_iter, region = region, sample_n = sample_n, tolerance = tolerance, combine_output = combined_output, minObs = minObs, scaleObs = scaleObs, t0 = t0, tn = tn, filetype = filetype, min_iter = min_iter)
   else outputs <- lapply(keep, 
-                         combineSamps, indata = indata, keep_iter = keep_iter, region = region, sample_n = sample_n, tolerance = tolerance, minObs = minObs, scaleObs = scaleObs, t0 = t0, tn = tn, filetype = filetype, min_iter = min_iter)
+                         combineSamps, indata = indata, keep_iter = keep_iter, region = region, sample_n = sample_n, tolerance = tolerance, combine_output = combined_output, minObs = minObs, scaleObs = scaleObs, t0 = t0, tn = tn, filetype = filetype, min_iter = min_iter)
   
   
   if(parallel) samp_post <- parallel::mclapply(outputs, mc.cores = n.cores,
