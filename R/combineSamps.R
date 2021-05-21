@@ -64,14 +64,14 @@ combineSamps <- function(species,
     dat <- out_meta$model$data() 
     
     # non-temporally explicit observation dataframe
-    dat <- data.frame(year = dat$Year, # year
-                      rec = dat$y,
-                      Site = dat$Site) # records
+    dat_df <- data.frame(year = dat$Year, # year
+                      rec = dat$y, # records
+                      site = dat$Site) # sites
     
     if(scaleObs == "global") {
       
       # subset to temporal window
-      dat_glob <- dat[dat$year >= (t0 - (out_meta$min_year - 1)) & dat$year <= (tn - (out_meta$min_year - 1)), ]
+      dat_glob <- dat_df[dat_df$year >= (t0 - (out_meta$min_year - 1)) & dat_df$year <= (tn - (out_meta$min_year - 1)), ]
       
       # number of global observations within time window t0 - tn
       nRec_glob <- sum(dat_glob$rec)
@@ -94,9 +94,7 @@ combineSamps <- function(species,
         
       }
       
-      dat_reg <- data.frame(year = dat$year, # year
-                        rec = dat$rec, # records
-                        region_site = region_site) # sites included within region
+      dat_reg <- cbind(dat_df, region_site) # sites included within region
       
       # subset to temporal window
       dat_reg <- dat_reg[dat_reg$region_site == 1 & dat_reg$year >= (t0 - (out_meta$min_year - 1)) & dat_reg$year <= (tn - (out_meta$min_year - 1)), ]
