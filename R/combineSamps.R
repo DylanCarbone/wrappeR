@@ -65,7 +65,8 @@ combineSamps <- function(species,
     
     # non-temporally explicit observation dataframe
     dat <- data.frame(year = dat$Year, # year
-                      rec = dat$y) # records
+                      rec = dat$y,
+                      Site = dat$Site) # records
     
     if(scaleObs == "global") {
       
