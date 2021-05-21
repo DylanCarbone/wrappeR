@@ -12,9 +12,6 @@
 #'
 #' @param modPath A character string or vector of strings. Location(s) of the 
 #'                occupancy model outputs. 
-#'
-#' @param metaPath A character string or vector of strings. Location(s) of the 
-#'                 occupancy model metadata.
 #'   
 #' @param ver A character string or vector of strings. Which set of occupancy 
 #'            model outputs to use? Can be manually specified e.g. Charlie's 
@@ -74,7 +71,6 @@
 
 createRoster <- function(index,
                          modPath = "/data-s3/occmods/", 
-                         metaPath,
                          ver = "most_recent",
                          group, 
                          indicator, 
