@@ -114,9 +114,9 @@ createRoster <- function(index,
     
   }
  
-  if (all(region %in% c("GB", "UK", "ENGLAND", "SCOTLAND", "WALES", "NORTHERN.IRELAND")) == FALSE) {
+  if (all(region %in% c("GB", "UK", "ENGLAND", "SCOTLAND", "WALES", "NORTHERN_IRELAND")) == FALSE) {
     
-    warning("Warning: not all regions match either GB, UK, ENGLAND, SCOTLAND, WALES, or NORTHERN.IRELAND is this what you expected?")
+    warning("Warning: not all regions match either GB, UK, ENGLAND, SCOTLAND, WALES, or NORTHERN_IRELAND is this what you expected?")
 
   }
   

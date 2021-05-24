@@ -23,8 +23,8 @@ applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
     
   } else if (roster$indicator == "pollinators") {
     
-    keep <- sampSubset("pollinators",
-                       inPath = roster$metaPath)
+    # keep <- sampSubset("pollinators",
+    #                    inPath = roster$metaPath) # I think this is broken
     
   } else {
     
