@@ -13,7 +13,7 @@ combineSamps <- function(species,
                          t0, 
                          tn, 
                          filetype,
-                         min_iter) { 
+                         iter) { 
   
   # set up defaults
   out_dat <- NULL
@@ -35,8 +35,11 @@ combineSamps <- function(species,
   
   if(!is.null(keep_iter)) {
     
+    min_iter <- iter[1] # minimum iteration number
+    max_iter <- iter[2] # maximum iteration number
+    
     # chained models
-    try(out_dat <- load_rdata(paste0(indata, species, "_20000_1.rdata")))  # where the first part of the model is stored for JASMIN models
+    try(out_dat <- load_rdata(paste0(indata, species, "_", max_iter, "_1.rdata")))  # where the data is stored for JASMIN models
     try(out_meta <- load_rdata(paste0(indata, species, "_", min_iter, "_1.rdata"))) # where metadata is stored for JASMIN models
     
   } else {
