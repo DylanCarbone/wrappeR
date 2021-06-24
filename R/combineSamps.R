@@ -42,6 +42,9 @@ combineSamps <- function(species,
     try(out_dat <- load_rdata(paste0(indata, species, "_", max_iter, "_1.rdata")))  # where the data is stored for JASMIN models
     try(out_meta <- load_rdata(paste0(indata, species, "_", min_iter, "_1.rdata"))) # where metadata is stored for JASMIN models
     
+    # some models are nested within the objects, e.g., out_dat$out$model
+    if(!is.null(out_dat) & is.null(out_dat$model)) out_dat <- out_dat$out 
+    
   } else {
     
     # non-chained models
