@@ -127,26 +127,37 @@ combineSamps <- function(species,
      !is.null(out_dat$model) # there is a model object to read from
   ) { # the conditions are met
     
-    if(!is.null(keep_iter) & max_iter <= 20000) {
+    if(!is.null(keep_iter)) {
+      
+      # chained models
+      
+      if(max_iter <= 20000) {
         
-      # chained models (chains separated <= 20,000 iterations)
-      out_dat1 <- NULL
-      out_dat2 <- NULL
-      out_dat3 <- NULL
-      
-      try(out_dat1 <- load_rdata(paste0(indata, species, "_", max_iter, "_1.rdata"))) # where occupancy data is stored for JASMIN models 
-      raw_occ1 <- data.frame(out_dat1$BUGSoutput$sims.list[REGION_IN_Q])
-      try(out_dat2 <- load_rdata(paste0(indata, species, "_", max_iter, "_2.rdata"))) # where occupancy data is stored for JASMIN models 
-      raw_occ2 <- data.frame(out_dat2$BUGSoutput$sims.list[REGION_IN_Q])
-      try(out_dat3 <- load_rdata(paste0(indata, species, "_", max_iter, "_3.rdata"))) # where occupancy data is stored for JASMIN models 
-      raw_occ3 <- data.frame(out_dat3$BUGSoutput$sims.list[REGION_IN_Q])
-      
-      if(!is.null(out_dat1) & !is.null(out_dat2) & !is.null(out_dat3)) # if all models loaded correctly
-        raw_occ <- rbind(raw_occ1, raw_occ2, raw_occ3)
-      
+        # chained models with chains separated <= 20,000 iterations
+        out_dat1 <- NULL
+        out_dat2 <- NULL
+        out_dat3 <- NULL
+        
+        try(out_dat1 <- load_rdata(paste0(indata, species, "_", max_iter, "_1.rdata"))) # where occupancy data is stored for JASMIN models 
+        raw_occ1 <- data.frame(out_dat1$BUGSoutput$sims.list[REGION_IN_Q])
+        try(out_dat2 <- load_rdata(paste0(indata, species, "_", max_iter, "_2.rdata"))) # where occupancy data is stored for JASMIN models 
+        raw_occ2 <- data.frame(out_dat2$BUGSoutput$sims.list[REGION_IN_Q])
+        try(out_dat3 <- load_rdata(paste0(indata, species, "_", max_iter, "_3.rdata"))) # where occupancy data is stored for JASMIN models 
+        raw_occ3 <- data.frame(out_dat3$BUGSoutput$sims.list[REGION_IN_Q])
+        
+        if(!is.null(out_dat1) & !is.null(out_dat2) & !is.null(out_dat3)) # if all models loaded correctly
+          raw_occ <- rbind(raw_occ1, raw_occ2, raw_occ3)
+        
+      } else {
+        
+        # chained models with chains combined 32,000 iterations
+        raw_occ <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
+        
+      }
+        
     } else {
       
-      # non-chained models (and chained models with chains combined 32,000 iterations)
+      # non-chained models
       raw_occ <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
       
     }
