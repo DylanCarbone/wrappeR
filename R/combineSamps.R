@@ -127,18 +127,18 @@ combineSamps <- function(species,
      !is.null(out_dat$model) # there is a model object to read from
   ) { # the conditions are met
     
-    if(!is.null(keep_iter)) {
-      
-      # chained models
+    if(!is.null(keep_iter) & max_iter <= 20000) {
+        
+      # chained models (chains separated <= 20,000 iterations)
       out_dat1 <- NULL
       out_dat2 <- NULL
       out_dat3 <- NULL
       
-      try(out_dat1 <- load_rdata(paste0(indata, species, "_20000_1.rdata"))) # where occupancy data is stored for JASMIN models 
+      try(out_dat1 <- load_rdata(paste0(indata, species, "_", max_iter, "_1.rdata"))) # where occupancy data is stored for JASMIN models 
       raw_occ1 <- data.frame(out_dat1$BUGSoutput$sims.list[REGION_IN_Q])
-      try(out_dat2 <- load_rdata(paste0(indata, species, "_20000_2.rdata"))) # where occupancy data is stored for JASMIN models 
+      try(out_dat2 <- load_rdata(paste0(indata, species, "_", max_iter, "_2.rdata"))) # where occupancy data is stored for JASMIN models 
       raw_occ2 <- data.frame(out_dat2$BUGSoutput$sims.list[REGION_IN_Q])
-      try(out_dat3 <- load_rdata(paste0(indata, species, "_20000_3.rdata"))) # where occupancy data is stored for JASMIN models 
+      try(out_dat3 <- load_rdata(paste0(indata, species, "_", max_iter, "_3.rdata"))) # where occupancy data is stored for JASMIN models 
       raw_occ3 <- data.frame(out_dat3$BUGSoutput$sims.list[REGION_IN_Q])
       
       if(!is.null(out_dat1) & !is.null(out_dat2) & !is.null(out_dat3)) # if all models loaded correctly
@@ -146,7 +146,7 @@ combineSamps <- function(species,
       
     } else {
       
-      # non-chained models
+      # non-chained models (and chained models with chains combined 32,000 iterations)
       raw_occ <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
       
     }
