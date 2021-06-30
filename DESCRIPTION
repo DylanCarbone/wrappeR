@@ -1,7 +1,7 @@
 Package: wrappeR
 Type: Package
 Title: A Pipeline for Biodiversity Indicators
-Version: 0.2.2
+Version: 0.2.3
 Date: 2021-05-21
 Author: Rob Boyd, Rob Cooke
 Maintainer: Rob Boyd <robboy@ceh.ac.uk>
