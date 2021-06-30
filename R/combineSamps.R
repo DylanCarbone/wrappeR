@@ -13,7 +13,7 @@ combineSamps <- function(species,
                          t0, 
                          tn, 
                          filetype,
-                         min_iter) { 
+                         iter) { 
   
   # set up defaults
   out_dat <- NULL
@@ -35,9 +35,15 @@ combineSamps <- function(species,
   
   if(!is.null(keep_iter)) {
     
+    min_iter <- iter[1] # minimum iteration number
+    max_iter <- iter[2] # maximum iteration number
+    
     # chained models
-    try(out_dat <- load_rdata(paste0(indata, species, "_20000_1.rdata")))  # where the first part of the model is stored for JASMIN models
+    try(out_dat <- load_rdata(paste0(indata, species, "_", max_iter, "_1.rdata")))  # where the data is stored for JASMIN models
     try(out_meta <- load_rdata(paste0(indata, species, "_", min_iter, "_1.rdata"))) # where metadata is stored for JASMIN models
+    
+    # some models are nested within the objects, e.g., out_dat$out$model
+    if(!is.null(out_dat) & is.null(out_dat$model)) out_dat <- out_dat$out 
     
   } else {
     
@@ -124,20 +130,31 @@ combineSamps <- function(species,
     if(!is.null(keep_iter)) {
       
       # chained models
-      out_dat1 <- NULL
-      out_dat2 <- NULL
-      out_dat3 <- NULL
       
-      try(out_dat1 <- load_rdata(paste0(indata, species, "_20000_1.rdata"))) # where occupancy data is stored for JASMIN models 
-      raw_occ1 <- data.frame(out_dat1$BUGSoutput$sims.list[REGION_IN_Q])
-      try(out_dat2 <- load_rdata(paste0(indata, species, "_20000_2.rdata"))) # where occupancy data is stored for JASMIN models 
-      raw_occ2 <- data.frame(out_dat2$BUGSoutput$sims.list[REGION_IN_Q])
-      try(out_dat3 <- load_rdata(paste0(indata, species, "_20000_3.rdata"))) # where occupancy data is stored for JASMIN models 
-      raw_occ3 <- data.frame(out_dat3$BUGSoutput$sims.list[REGION_IN_Q])
-      
-      if(!is.null(out_dat1) & !is.null(out_dat2) & !is.null(out_dat3)) # if all models loaded correctly
-        raw_occ <- rbind(raw_occ1, raw_occ2, raw_occ3)
-      
+      if(max_iter <= 20000) {
+        
+        # chained models with chains separated <= 20,000 iterations
+        out_dat1 <- NULL
+        out_dat2 <- NULL
+        out_dat3 <- NULL
+        
+        try(out_dat1 <- load_rdata(paste0(indata, species, "_", max_iter, "_1.rdata"))) # where occupancy data is stored for JASMIN models 
+        raw_occ1 <- data.frame(out_dat1$BUGSoutput$sims.list[REGION_IN_Q])
+        try(out_dat2 <- load_rdata(paste0(indata, species, "_", max_iter, "_2.rdata"))) # where occupancy data is stored for JASMIN models 
+        raw_occ2 <- data.frame(out_dat2$BUGSoutput$sims.list[REGION_IN_Q])
+        try(out_dat3 <- load_rdata(paste0(indata, species, "_", max_iter, "_3.rdata"))) # where occupancy data is stored for JASMIN models 
+        raw_occ3 <- data.frame(out_dat3$BUGSoutput$sims.list[REGION_IN_Q])
+        
+        if(!is.null(out_dat1) & !is.null(out_dat2) & !is.null(out_dat3)) # if all models loaded correctly
+          raw_occ <- rbind(raw_occ1, raw_occ2, raw_occ3)
+        
+      } else {
+        
+        # chained models with chains combined 32,000 iterations
+        raw_occ <- data.frame(out_dat$BUGSoutput$sims.list[REGION_IN_Q])
+        
+      }
+        
     } else {
       
       # non-chained models

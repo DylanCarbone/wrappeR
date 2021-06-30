@@ -33,13 +33,13 @@ tempSampPost <- function(indata = "../data/model_runs/",
   ### set up species list we want to loop though ###
   
   # default
-  min_iter <- NULL
+  iter <- NULL
   
-  # extract minimum iteration number for chained models
+  # extract minimum and maximum iteration number for chained models
   if(!is.null(keep_iter)) {
     
-    # function to find minimum iteration for JASMIN models - Tom August
-    findMinIteration <- function(list_of_file_names){
+    # function to find minimum and maximum iterations for JASMIN models - Tom August
+    findIteration <- function(list_of_file_names){
       
       if(length(list_of_file_names) < 1) stop('Error: list_of_file_names is empty')
       if(!is.character(list_of_file_names)) stop('Error: list_of_file_names must be a character')
@@ -52,12 +52,12 @@ tempSampPost <- function(indata = "../data/model_runs/",
       # Extract the iterations number
       iterations <- regmatches(list_of_file_names, regexpr('[[:digit:]]+$', list_of_file_names))
       
-      # Get minimum
-      return(min(as.numeric(iterations)))
+      # Get minimum and maximum
+      return(c(min(as.numeric(iterations)), max(as.numeric(iterations))))
       
     }
     
-    min_iter <- findMinIteration(keep_iter)
+    iter <- findIteration(keep_iter)
     
   }
   
@@ -66,9 +66,9 @@ tempSampPost <- function(indata = "../data/model_runs/",
   # loop through species
 
   if(parallel) outputs <- parallel::mclapply(keep, mc.cores = n.cores,
-                                             combineSamps, indata = indata, keep_iter = keep_iter, region = region, sample_n = sample_n, tolerance = tolerance, combined_output = combined_output, minObs = minObs, scaleObs = scaleObs, t0 = t0, tn = tn, filetype = filetype, min_iter = min_iter)
+                                             combineSamps, indata = indata, keep_iter = keep_iter, region = region, sample_n = sample_n, tolerance = tolerance, combined_output = combined_output, minObs = minObs, scaleObs = scaleObs, t0 = t0, tn = tn, filetype = filetype, iter = iter)
   else outputs <- lapply(keep, 
-                         combineSamps, indata = indata, keep_iter = keep_iter, region = region, sample_n = sample_n, tolerance = tolerance, combined_output = combined_output, minObs = minObs, scaleObs = scaleObs, t0 = t0, tn = tn, filetype = filetype, min_iter = min_iter)
+                         combineSamps, indata = indata, keep_iter = keep_iter, region = region, sample_n = sample_n, tolerance = tolerance, combined_output = combined_output, minObs = minObs, scaleObs = scaleObs, t0 = t0, tn = tn, filetype = filetype, iter = iter)
   
   
   if(parallel) samp_post <- parallel::mclapply(outputs, mc.cores = n.cores,
