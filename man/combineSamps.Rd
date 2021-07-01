@@ -4,7 +4,21 @@
 \alias{combineSamps}
 \title{\code{combineSamps} - function inside \code{tempSampPost}, see \code{tempSampPost} and \code{applySamp} for details}
 \usage{
-combineSamps(species, minObs, region, sample_n)
+combineSamps(
+  species,
+  indata,
+  keep_iter,
+  region,
+  sample_n,
+  tolerance,
+  combined_output,
+  minObs,
+  scaleObs,
+  t0,
+  tn,
+  filetype,
+  iter
+)
 }
 \description{
 \code{combineSamps} - function inside \code{tempSampPost}, see \code{tempSampPost} and \code{applySamp} for details
