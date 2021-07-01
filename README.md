@@ -1,5 +1,5 @@
 <!-- badges: start -->
-[![Travis build status](https://travis-ci.org/BiologicalRecordsCentre/wrappeR.svg?branch=main)](https://travis-ci.com/BiologicalRecordsCentre/wrappeR)
+[![Travis build status](https://travis-ci.com/BiologicalRecordsCentre/wrappeR.svg?branch=main)](https://travis-ci.com/BiologicalRecordsCentre/wrappeR)
 [![Codecov test coverage](https://codecov.io/gh/BiologicalRecordsCentre/wrappeR/branch/main/graph/badge.svg)](https://codecov.io/gh/BiologicalRecordsCentre/wrappeR?branch=main)
 [![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 <!-- badges: end -->
