@@ -5,15 +5,32 @@
 \title{\code{createMetadata} - Create master metadata table from objectstore data
 repository}
 \usage{
-createMetadata(file_location)
+createMetadata(file_location, oldMetadata = NULL)
 }
 \arguments{
-\item{file_location}{Path to root directory of occupancy models on object
-store}
+\item{file_location}{Path to root directory of data outputs on object store}
+
+\item{oldMetadata}{Dataframe object previously created by this function. All
+rows of data in this object will not be run. Note that if data has changed
+in any of the datasets contained within the old metadata dataframe, these
+will not be re-run. Defaults to NULL (metadata will be calculated for all
+datasets in the object store)}
 }
 \value{
 Dataframe of metadata
 }
 \description{
-This function create
+This function creates the metadata from a hierarchical data
+ structure. It assumes a structure of:
+ file_location/<taxa>/<data_type>/<dataset_name>. 
+ It assumes that all dataset names contain the year of entry (in the
+ format 2019 or 2019.2 for the second dataset in 2019). It also assumes
+ that there is an equivalent folder at:
+ file_location/<taxa>/input_data/<dataset_name>
+ Which contains the input data.
+ A lot of the parameters are hardcoded, and as such it is unlikely to return
+ perfect metadata if the structure of outputs is altered.
+ This takes about an hour to run as of 12 May 2021. You can pass it the
+ previous metadata as a parameter, so it will not run metadata collection
+ on any old datasets.
 }
