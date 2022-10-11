@@ -89,6 +89,7 @@ createRoster <- function(index,
                          clipBy = "group",
                          t0,
                          tn) {
+  warning("Check you have permission to use the input data and the outputs.\nRefer to the Object Store documentation in the Wiki for best practices.")
   
   if("most_recent" %in% ver) {
     
