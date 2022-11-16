@@ -68,7 +68,7 @@ calcMSI <- function(dat,
                                           end_year = maxYr) 
     
     final <- BRCindicators::trend_assessment(ind, 
-                                             start_year = maxYr,  
+                                             start_year = maxYr - 1,  
                                              end_year = maxYr) 
     
   } else {
@@ -141,18 +141,18 @@ calcMSI <- function(dat,
     
     lt <- BRCindicators::trend_assessment(ind, 
                                           method = method,
-                                          start_year = min(ind$year),  
-                                          end_year = max(ind$year)) 
+                                          start_year = minYr,  
+                                          end_year = maxYr) 
     
     st <- BRCindicators::trend_assessment(ind, 
                                           method = method,
-                                          start_year = (max(ind$year) - 5),  
-                                          end_year = max(ind$year)) 
+                                          start_year = maxYr - 5,  
+                                          end_year = maxYr) 
     
     final <- BRCindicators::trend_assessment(ind, 
                                              method = method,
-                                             start_year = max(ind$year),  
-                                             end_year = max(ind$year)) 
+                                             start_year = maxYr - 1,  
+                                             end_year = maxYr) 
     
   }
 
