@@ -16,11 +16,11 @@
 #'  on any old datasets.
 #'
 #' @param file_location Path to root directory of data outputs on object store
-#' @param oldMetadata Dataframe object previously created by this function. All
-#'  rows of data in this object will not be run. Note that if data has changed
+#' @param oldMetadata if TRUE metadata will be updated from a dataframe object 
+#'  previously created by this function, the most recent. 
+#'  All rows of data in this object will not be run. Note that if data has changed
 #'  in any of the datasets contained within the old metadata dataframe, these
-#'  will not be re-run. Defaults to NULL (metadata will be calculated for all
-#'  datasets in the object store)
+#'  will not be re-run. Defaults to TRUE 
 #' 
 #' @return Dataframe of metadata
 #' 
@@ -30,7 +30,9 @@
 #'         
 #' @export
 
-createMetadata <- function(file_location, oldMetadata = NULL){
+createMetadata <- function(file_location, oldMetadata = TRUE){ # changed oldMetadata so it is now default to produce this from most recent file in /data-s3/most_recent_meta
+  exceptions <- read.csv("/data-s3/metadata/exceptions.csv", ## need to create this!
+                         stringsAsFactors = FALSE)
   metadata <- suppressWarnings({pblapply(list.files(file_location), function(group){
     cat('Creating metadata for',group,'\n')
     data_types <- list.files(file.path(file_location, group))
@@ -71,10 +73,25 @@ createMetadata <- function(file_location, oldMetadata = NULL){
           return(df)
         } else {
           alreadyRun <- NULL
-          if(!is.null(oldMetadata)){
+          if(oldMetadata == TRUE){
+            
+            all_meta <- gsub(".csv", "", list.files("/data-s3/most_recent_meta"))
+            
+            most_recent_meta <- grep(as.character(max(
+              as.numeric(
+                substr(
+                  all_meta, 
+                  start = 10, 
+                  stop = nchar(all_meta))))), 
+              all_meta, value = TRUE)
+              
+
+            old_meta <- read.csv(file.path("/data-s3/most_recent_meta", 
+                                           paste0(most_recent_meta, ".csv")))
+            
             datasetsToRun <- !(file.path(file_location, group, data_type, datasets) %in%
-                                 oldMetadata$data_location)
-            alreadyRun <- oldMetadata[oldMetadata$data_location %in%
+                                 old_meta$data_location)
+            alreadyRun <- old_meta[old_meta$data_location %in%
                                         file.path(file_location, group, data_type, datasets),]
             if(!any(datasetsToRun)){
               # All our datasets are in metadata already. Just return the previous metadata
@@ -141,11 +158,24 @@ createMetadata <- function(file_location, oldMetadata = NULL){
                 speciesList <- as.character(names(speciesListInput$spp_vis)[-1])
               } else {
                 # Probably standard format. Find names in first column (hopefully species)
-                speciesList <- as.character(unique(data.frame(speciesListInput)[,1]))
+                if('CONCEPT' %in% colnames(speciesListInput)){ ## kattur - made if, so that can use for old and new format
+                  speciesList <- as.character(unique(data.frame(speciesListInput)[,'CONCEPT']))} ## kattur - changed to CONCEPT 
+                ## rather than [1], because 
+                ## not always the first 
+                ## column (e.g., Ellcur Trichoptera)
+                
+                if('species_long' %in% colnames(speciesListInput)){
+                  speciesList <- as.character(unique(data.frame(speciesListInput)[,'species_long']))} ## kattur new format started with this
+                
+                if('long_name' %in% colnames(speciesListInput)){
+                  speciesList <- as.character(unique(data.frame(speciesListInput)[,'long_name']))} ## kattur new format plan to use for future
               }
               n_species_input <- length(speciesList)
             } else {
               speciesListInput <- NULL
+              
+              n_species_input <- 'Unknown'  ## kattur - added here to match the fact that
+              ## allocated in the 'if' above
             }
             
             # Pull in some key metadata
@@ -177,7 +207,11 @@ createMetadata <- function(file_location, oldMetadata = NULL){
                 refFile <- ourfiles[1]
               }
               min_year <- max_year <- regions <- regions_aggs <- sparta_v <-
-                provenance <- user <- submit_date <- n_species <- n_species_input <- 'Unknown'
+                provenance <- user <- submit_date <- n_species  <- 'Unknown' 
+              ## kattur removed <- n_species_input, 
+              ## because n_species_input has already been
+              ## allocated above and this was over-riding it
+              
               if(length(ourfiles)==0){
                 # We have no outputs. Just set n_species to 0 so we know we tried to find data
                 n_species <- 0
@@ -224,8 +258,10 @@ createMetadata <- function(file_location, oldMetadata = NULL){
                       sparta_v <- provenance <- user <- submit_date <- 'Unknown'
                     }
                   }, error=function(e){
-                    min_year <- max_year <- n_species <- n_species_input <- regions <- regions_aggs <-
-                      sparta_v <- provenance <- user <- submit_date <- 'Unknown'
+                    min_year <- max_year <- n_species <- regions <- regions_aggs <-
+                      sparta_v <- provenance <- user <- submit_date <- 'Unknown' ## kattur removed <- n_species_input, 
+                    ## because n_species_input has already been
+                    ## allocated above
                   })
                 } else {
                   tryCatch({
@@ -237,6 +273,15 @@ createMetadata <- function(file_location, oldMetadata = NULL){
                       if('CONCEPT' %in% names(out)){
                         n_species <- length(unique(out$CONCEPT))
                       }
+                      if('species_long' %in% names(out)){
+                        n_species <- length(unique(out$species_long)) # kattur
+                      }
+                      
+                      
+                      if('long_name' %in% names(out)){
+                        n_species <- length(unique(out$long_name)) # kattur
+                      }
+                      
                     } else {
                       if('spp_vis' %in% names(out)){
                         n_species <- dim(out$spp_vis[-1])[2]
@@ -256,8 +301,10 @@ createMetadata <- function(file_location, oldMetadata = NULL){
                       regions_aggs <- paste(names(out$regions_aggs), collapse = "; ")
                     }
                   }, error=function(e){
-                    min_year <- max_year <- n_species <- n_species_input <- regions <- regions_aggs <-
-                      sparta_v <- provenance <- user <- submit_date <- 'Unknown'
+                    min_year <- max_year <- n_species <- regions <- regions_aggs <-
+                      sparta_v <- provenance <- user <- submit_date <- 'Unknown'  ## kattur removed <- n_species_input, 
+                    ## because n_species_input has already been
+                    ## allocated above
                   })
                 }
               }
@@ -269,7 +316,9 @@ createMetadata <- function(file_location, oldMetadata = NULL){
                            input_file = input_file,
                            year = as.character(years[i]),
                            most_recent_year = as.character(most_recent),
-                           most_recent = (years[i]==most_recent),
+                           most_recent = ifelse(datasets[i] %in% exceptions$dataset_name,
+                                                FALSE,
+                                                years[i]==most_recent),
                            min_year = as.character(min_year),
                            max_year = as.character(max_year),
                            n_species = as.character(n_species),
@@ -289,6 +338,23 @@ createMetadata <- function(file_location, oldMetadata = NULL){
           df <- bind_rows(alreadyRun, df)
           # df is the dataframe for all datasets with a data type within a group
           # i.e. will be the dataframe for a unique 'group + data_type' combination
+          
+          
+          # check if multiple most_recent == TRUE [kattur]
+          df_true <- df[df$most_recent == TRUE,]
+          
+          df_false <- df[df$most_recent == FALSE,]
+          
+          if(nrow(df_true) > 1 ){
+          
+            
+            df_true$most_recent <-  ifelse(df_true$dataset_name %in% alreadyRun$dataset_name, FALSE,df_true$most_recent)
+            
+          }
+          
+          df <- rbind(df_false, df_true)
+          # assume that any new are most recent unless in skip [kattur]
+          ## still need to work out what to do if all most_recent are FALSE
           return(df)
         }
       }) %>% bind_rows()
