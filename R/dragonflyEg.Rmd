@@ -1,0 +1,115 @@
+---
+title: "From species trends to multispecies indicators"
+author: "Rob Boyd"
+date: "16 November 2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Introduction
+
+Having fitted occupancy models to estimate trends in individual species’ distributions, we usually want to combine these time-series into a multispecies indicicator (MSI). The R packages TrendSummaries and BRCindicators contain a number of functions that can be used to generate MSIs, but they don’t talk to each other very easily. Here, I introduce wrappeR, an R package that wraps around TrendSummaries and BRCindicators, allowing users to quickly and flexibly produce MSIs from occupancy model outputs. As an example I produce a MSI for ants and bees in the UK.
+
+# Example workflow
+
+There are four steps to a wrappeR workflow: 1) create a roster to specify which filters should be applied to the occupancy model outputs; 2) apply those filters; 3) create the MSI using the filtered outputs; and, optionally, 4) summarise the outputs in the format that e.g. JNCC require. Note that I don’t explain all arguments to the wrappeR functions in this document, but they can be found in the package documentation.
+
+## Step 1: Create a roster
+
+It may be necessary to filter the occupancy model outputs before they can be used to create a MSI. For example, you may want to clip the individual species’ time series such that they only contribute to the MSI after the first year for which they have any records, and before the final year for which they have any records. Or you may want to select a subset of species, such as pollinators or priority species, for inclusion. Later I will introduce the function applyFilters which, as you can probably guess, applies filters to the occupancy model outputs. applyFilters works on one taxonomic group at a time. If an identical set of filters were to be applied to each taxonomic group, then it would be simple to use e.g. lapply to apply the function to all groups of interest. However, you may want to apply different filters to different groups; for example, you may want outputs for the whole of the UK for one group, but only Great Britain for another which has not been recorded in Northern Ireland. To enable the use of lapply where multiple arguments (filters) vary, we create a roster that can be passed to applyFilters. The roster is a list of 1-row dataframes in which each column corresponds to a filter. Rosters can be created using the createRoster function:
+
+```{r}
+library(plyr)
+library(wrappeR)
+library(BRCindicators)
+library(ggplot2)
+library(gridExtra)
+library(reshape2)
+
+roster <- createRoster(
+  index = 1,
+  modPath = "/data-s3/occmods/",
+  metaPath = "/data-s3/metadata/",
+  ver = "2021_Dragonflies_LERC_and_all_NSS",
+  indicator = "all",
+  region = "UK",
+  nSamps = 100,
+  minObs = 50,
+  write = FALSE,
+  outPath = NA,
+  group = "Dragonflies",
+  t0 = 1970,
+  tn = 2020
+)
+```
+
+## Step 2: Filter the model outputs
+
+Each argument passed to createRoster should be a vector with a length equal to the number of taxonomic groups to be included in the MSI. This way, roster can be passed to the applyFilters function, which will filter the outputs for each taxonomic group according to the other columns in roster:
+
+```{r, eval = FALSE}
+filterDat <- lapply(roster, wrappeR::applySamp, parallel = FALSE)
+
+write.csv(filterDat$`1`$samp_post, "./dragonflyDat.csv")
+```
+## Step 2.5: Look at individual species' trends 
+
+At this stage, you might want to inspect individual species' trends. You can do this with the plotSpeciesTrend function:
+
+```{r}
+
+#filterDat <- read.csv("./dragonflyDat.csv")
+
+dragonflyDat <- data("dragonflyDat")
+
+plotSpeciesTrend(dat = dragonflyDat,
+                 species = "aeshna affinis")
+
+plotSpeciesTrend(dat = dragonflyDat,
+                 species = "sympetrum striolatum")
+```
+## Step 3: Produce a multispecies indicator
+
+Now we can pass the filtered outputs to the calcMSI function which produces a MSI using a user-defined method. First let’s use the standard lambda indicator method:
+
+```{r}
+
+ind <- calcMSI(dat = dragonflyDat, 
+               method = "lambda", 
+               write = FALSE, 
+               outPath = NULL)
+
+str(ind)
+```
+
+calcMSI produces a list with five elements: a simple summary of the indicator, the associated metadata, and short term (final five years), long term (whole time series) and final year assessments of distribution change for each species. The metadata are the objects returned by BRCindicators::lambda_indicator or BRCindicators::bma when method = “lambda” or “bma”, respectively.
+
+## Step 4: Summarise the indicator for external use
+
+We currently produce UK- and England-level MSIs for JNCC who require the data in a particular format, and it is likely that we will be asked to produce future indicators in a similar format. The function summariseMSI will plot the indicator and summarise it in three tables that are required as “data sheets” by JNCC. I will apply it to the lambda indicator we generated earlier:
+
+```{r}
+sumStats <- summariseMSI(minYear = 1970, 
+                         maxYear  = 2020, 
+                         indicator = ind, 
+                         method = "lambda",
+                         plotType = "indicator",
+                         label = "MSI")
+```
+
+We then write sumStats to a three-tab excel file as require by JNCC: 
+
+```{r, eval = FALSE}
+for (i in 1:3) { 
+   
+  write.xlsx(sumStats[i], file=paste0("/data-s3/", 
+                               "ants_bees_", "sumStats.xlsx"),  
+             sheetName=paste(i),  
+             append=T, 
+             row.names = F) 
+}
+```
