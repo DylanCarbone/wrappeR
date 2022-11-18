@@ -33,7 +33,6 @@ plotSpeciesTrend <- function(dat, species) {
     ggplot2::labs(x = "",
                   y = "occupancy")
   
-  print(p)
   return(p)
   
 }
