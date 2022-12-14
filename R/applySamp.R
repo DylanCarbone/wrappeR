@@ -12,15 +12,113 @@ applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
   
   if (roster$indicator == "priority") {
     
-    keepInds <- which(!is.na(speciesInfo[, roster$region])) 
+    # keepInds <- which(!is.na(speciesInfo[, roster$region])) 
+    # 
+    # ## use both latin names and concept codes to screen for priority species 
+    # 
+    # keep <- c(as.character(speciesInfo$Species[keepInds]), 
+    #           as.character(speciesInfo$concept[keepInds]))
+    # 
+    # keep <- keep[-which(is.na(keep))]
     
-    ## use both latin names and concept codes to screen for priority species 
+    # the above commented code has been replaced with the following
+    # from line 28 to line 122 from KT and LB code
+    # it should be possible to simplify this code in the future
     
-    keep <- c(as.character(speciesInfo$Species[keepInds]), 
-              as.character(speciesInfo$concept[keepInds]))
+    if (!roster$region %in% c("WAL", "WALES", "SCO", "SCOTLAND",
+                              "ENG", "ENGLAND", "NIR","NORTHERN_IRELAND", "GB", "UK")){ #LB added "GB" and "UK"
+      
+      stop("Priority species region not recognised")
+    }
     
-    keep <- keep[-which(is.na(keep))]
+    if(roster$region == "WAL" | roster$region == "WALES") {pr_region <- "WALES"}
+    if(roster$region == "ENG" | roster$region == "ENGLAND") {pr_region <- "ENGLAND"}
+    if(roster$region == "SCO" | roster$region == "SCOTLAND") {pr_region <- "SCOTLAND"}
+    if(roster$region == "NIR" | roster$region == "NORTHERN_IRELAND") {pr_region <- "NORTHERN.IRELAND"}
+    if(roster$region %in% c("UK")) {pr_region <- c("WALES","ENGLAND", "SCOTLAND","NORTHERN.IRELAND" )} #LB
+    if(roster$region %in% c("GB")) {pr_region <- c("WALES","ENGLAND", "SCOTLAND")}
     
+    
+    speciesInfo_group <- speciesInfo[speciesInfo$Group %in% roster$group,]
+    
+    if (!any(!is.na(speciesInfo_group[, pr_region,]))) {
+      
+      stop("No priority species in this group")
+      
+    } else {
+      #LB replaced
+      #keepInds <- which(!is.na(speciesInfo_group[, pr_region,]))
+      # with
+      keepInds <- sapply(1:nrow(speciesInfo_group), function(i) any(speciesInfo_group[i,pr_region] == "Y"))  
+      # as before from here
+      keep <- c(as.character(speciesInfo_group$Species[keepInds]), 
+                as.character(speciesInfo_group$concept[keepInds]))
+      
+      keep <- unique(keep)  
+      
+      modFilePath <- file.path(roster$modPath, roster$group, 
+                               "occmod_outputs", roster$ver)
+      
+      modFiles_rdata <- list.files(modFilePath, pattern = ".rdata")
+      
+      modFiles_rds <- list.files(modFilePath, pattern = ".rds")
+      
+      if (length(modFiles_rdata) == 0 & length(modFiles_rds) == 
+          0) {
+        
+        stop("Model files must be either .rds or .rdata")
+        
+      } else {
+        
+        if (length(modFiles_rdata) == 0) {
+          
+          filetype <- "rds"
+          
+          modFiles <- modFiles_rds
+          
+        } else {
+          
+          filetype <- "rdata"
+          modFiles <- modFiles_rdata }
+        
+      }
+      
+      keep_iter <- gsub(pattern = paste0("\\.", filetype), 
+                        repl = "", modFiles) 
+      
+      first_spp <- keep_iter[[1]]
+      
+      if (substr(first_spp, (nchar(first_spp) + 1) - 2,
+                 nchar(first_spp)) %in% c("_1", "_2", "_3")) {
+        
+        keep_name <- keep[tolower(keep) %in% tolower(stringr::str_replace(keep_iter,"(?<![A-z][A_z][A-z])_.*", ""))]
+        
+        keep_concept<- keep[tolower(keep) %in% tolower(stringr::str_replace(keep_iter,"(?<![a-z])_.*", ""))]
+        
+        keep <- c(keep_concept, keep_name)
+        
+        #      keep_iter <- NULL
+        
+        keep <- unique(keep)
+        
+        keep <- keep[!is.na(keep)]
+        
+        keep_iter <- keep_iter[(tolower(stringr::str_replace(keep_iter,"(?<![a-z])_.*", ""))
+                                %in% tolower(keep)) |
+                                 (tolower(stringr::str_replace(keep_iter,"(?<![A-z][A_z][A-z])_.*", ""))
+                                  %in% tolower(keep))]
+        
+      }  else {
+        
+        keep <- keep_iter[tolower(keep_iter) %in% tolower(keep)]
+        
+        keep_iter <- NULL
+        
+        keep <- unique(keep)
+        
+      }
+      
+    }
   } else if (roster$indicator == "pollinators") {
     
     # keep <- sampSubset("pollinators",
@@ -53,7 +151,8 @@ applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
     # retain the species names (with iteration number if applicable - chained models)
     keep_iter <- gsub(pattern = paste0("\\.", filetype), repl = "", modFiles)
   }
-  
+  if (roster$indicator != "priority"){ ## Added by KATTUR
+    
   first_spp <- keep_iter[[1]]
   
   # test if first species is chained (i.e., JASMIN models)
@@ -71,6 +170,7 @@ applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
     
     keep_iter <- NULL
     
+  }
   }
   
   # Subset to speciesToKeep
