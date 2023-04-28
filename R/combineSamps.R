@@ -22,8 +22,14 @@ combineSamps <- function(species,
   nRec_glob <- NA
   nRec_reg <- NA
   nRec <- NA
+  yrs <- NA
   gaps <- NULL
   rot <- NULL
+  first <- NA
+  last <- NA
+  gap <- NA
+  firstMod <- NA
+  lastMod <- NA
   REGION_IN_Q <- paste0("psi.fs.r_", region)
   
   # load_rdata function
@@ -208,8 +214,8 @@ combineSamps <- function(species,
       else
         datm <- dat_reg # temporally explicit regional scale metadata
       
-      first <- min(datm$year[datm$rec == 1]) + (t0 - 1)
-      last <- max(datm$year[datm$rec == 1]) + (t0 - 1)
+      first <- min(datm$year[datm$rec == 1]) + (out_meta$min_year - 1)
+      last <- max(datm$year[datm$rec == 1]) + (out_meta$min_year - 1)
       
       firstMod <- t0
       
