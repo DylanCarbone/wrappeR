@@ -206,7 +206,7 @@ applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
   }
   
   if(sample == TRUE)
-    out <- tempSampPost(indata = paste0(roster$modPath, roster$group, "/occmod_outputs/", roster$ver, "/"),
+    out <- tempSampPost(indata = paste(roster$modPath, roster$group, "occmod_outputs", roster$ver, "", sep = "/"),
                         keep = keep,
                         keep_iter = keep_iter,
                         output_path = NULL,
