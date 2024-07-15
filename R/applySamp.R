@@ -247,8 +247,7 @@ applySamp <- function(roster, parallel = TRUE, sample = TRUE) {
     
     comb <- list(samp_post, meta)
     
-    save(comb, file = paste0(roster$outPath, roster$group, "_", roster$indicator, 
-                                      "_", roster$region, "_samp.rdata"))
+    save(comb, file = file.path(roster$outPath, paste0(roster$group, "_", roster$indicator, "_", roster$region, "_samp.rdata")))
     
   }
   
